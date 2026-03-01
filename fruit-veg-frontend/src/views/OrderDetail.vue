@@ -140,6 +140,14 @@
               确认收货
             </el-button>
             <el-button
+              type="info"
+              @click="handleRemindShip"
+              v-if="order.status === 'shipped'"
+            >
+              <el-icon><Bell /></el-icon>
+              提醒发货
+            </el-button>
+            <el-button
               type="default"
               @click="handleRefund"
               v-if="order.status === 'completed' || order.status === 'delivered'"
@@ -155,6 +163,7 @@
               <el-icon><Star /></el-icon>
               评价订单
             </el-button>
+            <el-button plain @click="navigate('/orders')">返回订单列表</el-button>
           </div>
         </el-card>
       </el-main>
@@ -202,7 +211,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppNavigation } from '@/composables/useAppNavigation'
-import { ArrowLeft, Picture, Delete, CreditCard, CircleCheck, Refresh, Star } from '@element-plus/icons-vue'
+import { ArrowLeft, Picture, Delete, CreditCard, CircleCheck, Refresh, Star, Bell } from '@element-plus/icons-vue'
 import { applyRefund, cancelOrder, confirmReceive, getOrderDetail, payOrder, submitOrderReview } from '@/api/order'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
@@ -303,6 +312,10 @@ const handleConfirmReceive = async () => {
   await confirmReceive(order.value.id)
   ElMessage.success('确认收货成功')
   fetchOrderDetail()
+}
+
+const handleRemindShip = async () => {
+  ElMessage.success('已提醒商家尽快发货')
 }
 
 const handleRefund = async () => {

@@ -187,7 +187,7 @@ const handleRegister = () => {
   justify-content: center;
   align-items: center;
   background-color: #f5f7fa;
-  background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1920&h=1080&fit=crop');
+  background-image: url('/api/images/VCG41N1553604624.jpg');
   background-size: cover;
   background-position: center;
 }

@@ -122,6 +122,14 @@
                   <el-icon><CircleCheck /></el-icon>
                   确认收货
                 </el-button>
+                <el-button
+                  link
+                  @click="handleRemindShip(scope.row)"
+                  v-if="scope.row.status === 'shipped'"
+                >
+                  <el-icon><Refresh /></el-icon>
+                  提醒发货
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -246,6 +254,10 @@ const handleConfirmReceive = async (order) => {
   await confirmReceive(order.id)
   ElMessage.success('确认收货成功')
   fetchOrderList()
+}
+
+const handleRemindShip = async () => {
+  ElMessage.success('已提醒商家尽快发货')
 }
 
 const fetchOrderList = async () => {

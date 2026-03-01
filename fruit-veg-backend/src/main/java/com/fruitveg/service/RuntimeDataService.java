@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,38 +21,40 @@ public class RuntimeDataService {
 
     private static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String STATE_KEY = "runtime-data-service-v2";
+    private static final Pattern LEGACY_VCG_PATTERN =
+            Pattern.compile(".*/(VCG[0-9A-Za-z]+\\.(?:jpg|jpeg))(?:\\?.*)?$", Pattern.CASE_INSENSITIVE);
     private static final Map<String, String> IMAGE_URLS = new HashMap<>();
 
     static {
-        IMAGE_URLS.put("shop", "https://images.unsplash.com/photo-1685273899682-fiVn6KQhIPo?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("shop", "/api/images/VCG211570378418.jpg");
 
-        IMAGE_URLS.put("banner-1", "https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=1600&q=80");
-        IMAGE_URLS.put("banner-2", "https://images.unsplash.com/photo-1709402812245-wguVC8oG3qw?auto=format&fit=crop&w=1600&q=80");
-        IMAGE_URLS.put("banner-3", "https://images.unsplash.com/photo-1690293067872-pjcoyZLSnpw?auto=format&fit=crop&w=1600&q=80");
+        IMAGE_URLS.put("banner-1", "/api/images/VCG211357193212.jpg");
+        IMAGE_URLS.put("banner-2", "/api/images/VCG211562876467.jpg");
+        IMAGE_URLS.put("banner-3", "/api/images/VCG41N1414031312.jpg");
 
-        IMAGE_URLS.put("circle-1", "https://images.unsplash.com/photo-1533907650686-70576141c030?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("circle-2", "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("circle-3", "https://images.unsplash.com/photo-1568584711271-096ca3376931?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("circle-1", "/api/images/VCG211485231852.webp");
+        IMAGE_URLS.put("circle-2", "/api/images/VCG41N1414031312.webp");
+        IMAGE_URLS.put("circle-3", "/api/images/VCG41N1413254862.webp");
 
-        IMAGE_URLS.put("tomato", "https://source.unsplash.com/8FOwI8PMZME/1000x750");
-        IMAGE_URLS.put("apple", "https://source.unsplash.com/vAFQ-JHpa_E/1000x750");
+        IMAGE_URLS.put("tomato", "/api/images/VCG41N1487022738.jpg");
+        IMAGE_URLS.put("apple", "/api/images/VCG211554725298.jpg");
 
-        IMAGE_URLS.put("product1", "https://source.unsplash.com/aVBpfmR3YBc/1200x900");
-        IMAGE_URLS.put("product-detail1", "https://source.unsplash.com/aVBpfmR3YBc/1200x901");
-        IMAGE_URLS.put("product2", "https://source.unsplash.com/8FOwI8PMZME/1200x900");
-        IMAGE_URLS.put("product-detail2", "https://source.unsplash.com/8FOwI8PMZME/1200x901");
-        IMAGE_URLS.put("product3", "https://source.unsplash.com/fPLSD4mz7II/1200x900");
-        IMAGE_URLS.put("product-detail3", "https://source.unsplash.com/fPLSD4mz7II/1200x901");
-        IMAGE_URLS.put("product4", "https://source.unsplash.com/vAFQ-JHpa_E/1200x900");
-        IMAGE_URLS.put("product-detail4", "https://source.unsplash.com/vAFQ-JHpa_E/1200x901");
-        IMAGE_URLS.put("product5", "https://source.unsplash.com/sdDA-pMzW10/1200x900");
-        IMAGE_URLS.put("product-detail5", "https://source.unsplash.com/sdDA-pMzW10/1200x901");
-        IMAGE_URLS.put("product6", "https://source.unsplash.com/ckbTdSZh5Zo/1200x900");
-        IMAGE_URLS.put("product-detail6", "https://source.unsplash.com/ckbTdSZh5Zo/1200x901");
-        IMAGE_URLS.put("product7", "https://source.unsplash.com/5cqDgYwlcCM/1200x900");
-        IMAGE_URLS.put("product-detail7", "https://source.unsplash.com/5cqDgYwlcCM/1200x901");
-        IMAGE_URLS.put("product8", "https://source.unsplash.com/wvtorL2ww1A/1200x900");
-        IMAGE_URLS.put("product-detail8", "https://source.unsplash.com/wvtorL2ww1A/1200x901");
+        IMAGE_URLS.put("product1", "/api/images/VCG211490364476.webp");
+        IMAGE_URLS.put("product-detail1", "/api/images/VCG211324068414.jpg");
+        IMAGE_URLS.put("product2", "/api/images/VCG211412015500.webp");
+        IMAGE_URLS.put("product-detail2", "/api/images/VCG211412015500.webp");
+        IMAGE_URLS.put("product3", "/api/images/VCG211450687680.webp");
+        IMAGE_URLS.put("product-detail3", "/api/images/VCG211450687680.webp");
+        IMAGE_URLS.put("product4", "/api/images/VCG211415338609.webp");
+        IMAGE_URLS.put("product-detail4", "/api/images/VCG211415338609.webp");
+        IMAGE_URLS.put("product5", "/api/images/VCG211375299502.webp");
+        IMAGE_URLS.put("product-detail5", "/api/images/VCG211375299502.webp");
+        IMAGE_URLS.put("product6", "/api/images/VCG211583441112.webp");
+        IMAGE_URLS.put("product-detail6", "/api/images/VCG211583441112.webp");
+        IMAGE_URLS.put("product7", "/api/images/VCG211564814308.webp");
+        IMAGE_URLS.put("product-detail7", "/api/images/VCG211564814308.webp");
+        IMAGE_URLS.put("product8", "/api/images/VCG211429867102.webp");
+        IMAGE_URLS.put("product-detail8", "/api/images/VCG211429867102.webp");
     }
 
     private final List<Map<String, Object>> categories = new ArrayList<>();
@@ -1599,7 +1603,7 @@ public class RuntimeDataService {
         if (directUrl != null) {
             return directUrl;
         }
-        return "https://picsum.photos/seed/" + tag + "/800/600";
+        return "/api/images/VCG211560306770.jpeg";
     }
 
     private Map<String, Object> logisticsTrack(String status, String description) {
@@ -1661,10 +1665,79 @@ public class RuntimeDataService {
             Map<String, Object> state = objectMapper.readValue(rows.get(0), new TypeReference<Map<String, Object>>() {
             });
             restoreState(state);
+            normalizeStateImageUrls();
+            persistStateSilently();
             return !categories.isEmpty();
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void normalizeStateImageUrls() {
+        for (Map<String, Object> product : products) {
+            product.put("image", normalizeImageUrl(product.get("image")));
+            product.put("mainImage", normalizeImageUrl(product.get("mainImage")));
+            product.put("main_image", normalizeImageUrl(product.get("main_image")));
+            product.put("images", normalizeImageList(product.get("images")));
+        }
+        for (Map<String, Object> merchant : merchants) {
+            merchant.put("logoUrl", normalizeImageUrl(merchant.get("logoUrl")));
+            merchant.put("shopLogo", normalizeImageUrl(merchant.get("shopLogo")));
+            merchant.put("shop_logo", normalizeImageUrl(merchant.get("shop_logo")));
+        }
+        for (Map<String, Object> banner : banners) {
+            banner.put("imageUrl", normalizeImageUrl(banner.get("imageUrl")));
+            banner.put("image_url", normalizeImageUrl(banner.get("image_url")));
+        }
+        for (Map<String, Object> post : circlePosts) {
+            post.put("images", normalizeImageList(post.get("images")));
+        }
+        for (Map<String, Object> trace : traceByProduct.values()) {
+            trace.put("testReport", normalizeImageUrl(trace.get("testReport")));
+            trace.put("test_report", normalizeImageUrl(trace.get("test_report")));
+        }
+        for (Map<String, Object> order : userOrders) {
+            Object productsObj = order.get("products");
+            if (productsObj instanceof List) {
+                for (Object p : (List<?>) productsObj) {
+                    if (p instanceof Map) {
+                        Map<String, Object> item = (Map<String, Object>) p;
+                        item.put("image", normalizeImageUrl(item.get("image")));
+                        item.put("mainImage", normalizeImageUrl(item.get("mainImage")));
+                    }
+                }
+            }
+        }
+    }
+
+    private List<String> normalizeImageList(Object value) {
+        if (!(value instanceof List)) {
+            return Collections.emptyList();
+        }
+        List<String> normalized = new ArrayList<>();
+        for (Object item : (List<?>) value) {
+            normalized.add(normalizeImageUrl(item));
+        }
+        return normalized;
+    }
+
+    private String normalizeImageUrl(Object raw) {
+        String value = raw == null ? "" : String.valueOf(raw).trim();
+        if (value.isEmpty()) {
+            return "/api/images/VCG211560306770.jpeg";
+        }
+        if (value.startsWith("/api/images/")) {
+            return value;
+        }
+        Matcher matcher = LEGACY_VCG_PATTERN.matcher(value);
+        if (matcher.matches()) {
+            return "/api/images/" + matcher.group(1);
+        }
+        if (value.contains("unsplash.com")) {
+            return "/api/images/VCG211583441112.webp";
+        }
+        return "/api/images/VCG211560306770.jpeg";
     }
 
     private void persistState() {

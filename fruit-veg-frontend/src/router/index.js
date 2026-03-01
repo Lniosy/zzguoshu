@@ -109,6 +109,11 @@ const router = createRouter({
       meta: { requireAuth: true }
     },
     {
+      path: '/trace/detail/:id',
+      name: 'trace-detail',
+      component: () => import('../views/TraceView.vue')
+    },
+    {
       path: '/cart',
       name: 'cart',
       component: () => import('../views/CartView.vue'),

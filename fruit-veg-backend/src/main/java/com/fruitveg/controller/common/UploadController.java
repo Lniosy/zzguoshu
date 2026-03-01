@@ -17,7 +17,7 @@ public class UploadController {
     public Result<Map<String, Object>> upload(MultipartFile file) {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("name", file == null ? "" : file.getOriginalFilename());
-        data.put("url", "https://picsum.photos/seed/upload/800/600");
+        data.put("url", "/api/images/VCG211560306770.jpeg");
         return Result.success(data);
     }
 }

@@ -94,6 +94,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/content/banners", "/api/content/banners", "/content/notices", "/api/content/notices").permitAll()
                 .antMatchers("/circle/list", "/api/circle/list", "/circle/detail/**", "/api/circle/detail/**").permitAll()
                 .antMatchers("/trace/detail/**", "/api/trace/detail/**").permitAll()
+                .antMatchers("/images/**", "/api/images/**").permitAll()
                 // 允许OPTIONS请求
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // 允许接口文档访问（包含上下文路径的版本）
@@ -131,12 +132,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "/v2/api-docs",
                 "/v3/api-docs",
                 "/upload/**",
+                "/images/**",
                 "/api/doc.html",
                 "/api/webjars/**",
                 "/api/swagger-resources/**",
                 "/api/v2/api-docs",
                 "/api/v3/api-docs",
-                "/api/upload/**"
+                "/api/upload/**",
+                "/api/images/**"
         );
     }
 }

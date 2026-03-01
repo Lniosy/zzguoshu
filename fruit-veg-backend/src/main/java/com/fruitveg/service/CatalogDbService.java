@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class CatalogDbService {
 
-    private static final String DEFAULT_IMAGE = "https://picsum.photos/seed/default-product/800/600";
+    private static final String DEFAULT_IMAGE = "/api/images/VCG211496684730.jpg";
     private static final SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private final BizCategoryMapper categoryMapper;

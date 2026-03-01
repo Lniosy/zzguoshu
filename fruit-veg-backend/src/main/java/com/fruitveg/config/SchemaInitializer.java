@@ -1,10 +1,12 @@
 package com.fruitveg.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(1)
 public class SchemaInitializer implements CommandLineRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -64,5 +66,34 @@ public class SchemaInitializer implements CommandLineRunner {
                         + "update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
                         + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
+
+        // Backward-compatible migration:
+        // old init scripts may create business tables without logic-delete column.
+        ensureSoftDeleteColumns();
+    }
+
+    private void ensureSoftDeleteColumns() {
+        ensureColumnExists("sys_user", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_merchant", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_category", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_product", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_order", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_order_item", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_trace", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_user_address", "deleted", "TINYINT DEFAULT 0");
+        ensureColumnExists("biz_circle", "deleted", "TINYINT DEFAULT 0");
+    }
+
+    private void ensureColumnExists(String tableName, String columnName, String definition) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns " +
+                        "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?",
+                Integer.class,
+                tableName,
+                columnName
+        );
+        if (count != null && count == 0) {
+            jdbcTemplate.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + definition);
+        }
     }
 }
