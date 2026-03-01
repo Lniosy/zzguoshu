@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fruitveg.common.Result;
 import com.fruitveg.entity.SysUser;
 import com.fruitveg.mapper.SysUserMapper;
-import com.fruitveg.service.MockDataService;
+import com.fruitveg.service.RuntimeDataService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final SysUserMapper sysUserMapper;
-    private final MockDataService mockDataService;
+    private final RuntimeDataService mockDataService;
 
-    public AdminController(SysUserMapper sysUserMapper, MockDataService mockDataService) {
+    public AdminController(SysUserMapper sysUserMapper, RuntimeDataService mockDataService) {
         this.sysUserMapper = sysUserMapper;
         this.mockDataService = mockDataService;
     }

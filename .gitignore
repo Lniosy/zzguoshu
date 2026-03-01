@@ -31,6 +31,7 @@ fruit-veg-backend/spring-project.zip
 
 # Optional local uploads
 upload/
+config/mcporter.json
 
 # Proposal documents (keep local only)
 开题报告*.doc

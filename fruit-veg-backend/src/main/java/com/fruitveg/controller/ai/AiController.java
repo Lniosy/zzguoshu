@@ -2,7 +2,7 @@ package com.fruitveg.controller.ai;
 
 import com.fruitveg.common.Result;
 import com.fruitveg.service.AiClientService;
-import com.fruitveg.service.MockDataService;
+import com.fruitveg.service.RuntimeDataService;
 import com.fruitveg.utils.JwtUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +15,10 @@ import java.util.Map;
 public class AiController {
 
     private final AiClientService aiClientService;
-    private final MockDataService mockDataService;
+    private final RuntimeDataService mockDataService;
     private final JwtUtils jwtUtils;
 
-    public AiController(AiClientService aiClientService, MockDataService mockDataService, JwtUtils jwtUtils) {
+    public AiController(AiClientService aiClientService, RuntimeDataService mockDataService, JwtUtils jwtUtils) {
         this.aiClientService = aiClientService;
         this.mockDataService = mockDataService;
         this.jwtUtils = jwtUtils;

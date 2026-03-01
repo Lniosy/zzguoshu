@@ -1,7 +1,7 @@
 package com.fruitveg.controller.merchant;
 
 import com.fruitveg.common.Result;
-import com.fruitveg.service.MockDataService;
+import com.fruitveg.service.RuntimeDataService;
 import com.fruitveg.utils.JwtUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +14,10 @@ import java.util.Map;
 @PreAuthorize("hasAnyRole('USER','MERCHANT','ADMIN')")
 public class MerchantController {
 
-    private final MockDataService mockDataService;
+    private final RuntimeDataService mockDataService;
     private final JwtUtils jwtUtils;
 
-    public MerchantController(MockDataService mockDataService, JwtUtils jwtUtils) {
+    public MerchantController(RuntimeDataService mockDataService, JwtUtils jwtUtils) {
         this.mockDataService = mockDataService;
         this.jwtUtils = jwtUtils;
     }

@@ -30,5 +30,39 @@ public class SchemaInitializer implements CommandLineRunner {
                         + "INDEX idx_is_default (is_default)"
                         + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
+        jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS biz_banner ("
+                        + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+                        + "title VARCHAR(200) NOT NULL,"
+                        + "image_url VARCHAR(500) NOT NULL,"
+                        + "target_url VARCHAR(500) NULL,"
+                        + "sort INT DEFAULT 0,"
+                        + "status TINYINT DEFAULT 1,"
+                        + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                        + "update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+                        + "INDEX idx_status (status)"
+                        + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        );
+        jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS biz_notice ("
+                        + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+                        + "type VARCHAR(50) NOT NULL,"
+                        + "title VARCHAR(200) NOT NULL,"
+                        + "content VARCHAR(1000) NULL,"
+                        + "publish_time DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                        + "status TINYINT DEFAULT 1,"
+                        + "create_time DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                        + "update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+                        + "INDEX idx_status (status),"
+                        + "INDEX idx_publish_time (publish_time)"
+                        + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        );
+        jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS biz_runtime_state ("
+                        + "state_key VARCHAR(64) PRIMARY KEY,"
+                        + "state_json LONGTEXT NOT NULL,"
+                        + "update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                        + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        );
     }
 }

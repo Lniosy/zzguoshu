@@ -1,7 +1,7 @@
 package com.fruitveg.controller.order;
 
 import com.fruitveg.common.Result;
-import com.fruitveg.service.MockDataService;
+import com.fruitveg.service.RuntimeDataService;
 import com.fruitveg.utils.JwtUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,10 +12,10 @@ import java.util.Map;
 @RequestMapping("/order")
 public class OrderController {
 
-    private final MockDataService mockDataService;
+    private final RuntimeDataService mockDataService;
     private final JwtUtils jwtUtils;
 
-    public OrderController(MockDataService mockDataService, JwtUtils jwtUtils) {
+    public OrderController(RuntimeDataService mockDataService, JwtUtils jwtUtils) {
         this.mockDataService = mockDataService;
         this.jwtUtils = jwtUtils;
     }

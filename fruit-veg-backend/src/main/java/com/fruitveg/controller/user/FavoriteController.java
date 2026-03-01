@@ -1,7 +1,7 @@
 package com.fruitveg.controller.user;
 
 import com.fruitveg.common.Result;
-import com.fruitveg.service.MockDataService;
+import com.fruitveg.service.RuntimeDataService;
 import com.fruitveg.utils.JwtUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +13,10 @@ import java.util.Map;
 @RequestMapping("/favorite")
 public class FavoriteController {
 
-    private final MockDataService mockDataService;
+    private final RuntimeDataService mockDataService;
     private final JwtUtils jwtUtils;
 
-    public FavoriteController(MockDataService mockDataService, JwtUtils jwtUtils) {
+    public FavoriteController(RuntimeDataService mockDataService, JwtUtils jwtUtils) {
         this.mockDataService = mockDataService;
         this.jwtUtils = jwtUtils;
     }

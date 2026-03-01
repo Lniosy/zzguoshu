@@ -1,7 +1,7 @@
 package com.fruitveg.controller.product;
 
 import com.fruitveg.common.Result;
-import com.fruitveg.service.MockDataService;
+import com.fruitveg.service.CatalogDbService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,20 +10,20 @@ import java.util.Map;
 @RestController
 public class ProductController {
 
-    private final MockDataService mockDataService;
+    private final CatalogDbService catalogDbService;
 
-    public ProductController(MockDataService mockDataService) {
-        this.mockDataService = mockDataService;
+    public ProductController(CatalogDbService catalogDbService) {
+        this.catalogDbService = catalogDbService;
     }
 
     @GetMapping("/category/list")
     public Result<List<Map<String, Object>>> getCategoryList() {
-        return Result.success(mockDataService.listCategoryTree());
+        return Result.success(catalogDbService.listCategoryTree());
     }
 
     @GetMapping("/category/tree")
     public Result<List<Map<String, Object>>> getCategoryTree() {
-        return Result.success(mockDataService.listCategoryTree());
+        return Result.success(catalogDbService.listCategoryTree());
     }
 
     @GetMapping("/product/list")
@@ -36,17 +36,17 @@ public class ProductController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice
     ) {
-        return Result.success(mockDataService.listProducts(page, size, keyword, sortBy, category, minPrice, maxPrice));
+        return Result.success(catalogDbService.listProducts(page, size, keyword, sortBy, category, minPrice, maxPrice));
     }
 
     @GetMapping("/product/recommend")
     public Result<List<Map<String, Object>>> getRecommendProducts() {
-        return Result.success(mockDataService.recommendProducts());
+        return Result.success(catalogDbService.recommendProducts());
     }
 
     @GetMapping("/product/{id}")
     public Result<Map<String, Object>> getProductDetail(@PathVariable Long id) {
-        Map<String, Object> product = mockDataService.getProduct(id);
+        Map<String, Object> product = catalogDbService.getProduct(id);
         if (product == null) {
             return Result.error(404, "商品不存在");
         }
@@ -55,6 +55,6 @@ public class ProductController {
 
     @GetMapping("/product/search")
     public Result<Map<String, Object>> searchProduct(@RequestParam String keyword) {
-        return Result.success(mockDataService.listProducts(1, 12, keyword, null, null, null, null));
+        return Result.success(catalogDbService.listProducts(1, 12, keyword, null, null, null, null));
     }
 }

@@ -1,5 +1,8 @@
 package com.fruitveg.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -12,9 +15,43 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
-public class MockDataService {
+public class RuntimeDataService {
 
     private static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String STATE_KEY = "mock-data-service";
+    private static final Map<String, String> IMAGE_URLS = new HashMap<>();
+
+    static {
+        IMAGE_URLS.put("shop", "https://images.unsplash.com/photo-1685273899682-fiVn6KQhIPo?auto=format&fit=crop&w=1200&q=80");
+
+        IMAGE_URLS.put("banner-1", "https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=1600&q=80");
+        IMAGE_URLS.put("banner-2", "https://images.unsplash.com/photo-1709402812245-wguVC8oG3qw?auto=format&fit=crop&w=1600&q=80");
+        IMAGE_URLS.put("banner-3", "https://images.unsplash.com/photo-1690293067872-pjcoyZLSnpw?auto=format&fit=crop&w=1600&q=80");
+
+        IMAGE_URLS.put("circle-1", "https://images.unsplash.com/photo-1533907650686-70576141c030?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("circle-2", "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("circle-3", "https://images.unsplash.com/photo-1568584711271-096ca3376931?auto=format&fit=crop&w=1200&q=80");
+
+        IMAGE_URLS.put("tomato", "https://images.unsplash.com/photo-1755321096149-v2b9Zh1ORm8?auto=format&fit=crop&w=1000&q=80");
+        IMAGE_URLS.put("apple", "https://images.unsplash.com/photo-1652299035422-7waRESfE464?auto=format&fit=crop&w=1000&q=80");
+
+        IMAGE_URLS.put("product1", "https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail1", "https://images.unsplash.com/photo-1642752602324-jBZSdHbS4Rg?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product2", "https://images.unsplash.com/photo-1765653379054-88OzijJfpv8?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail2", "https://images.unsplash.com/photo-1742124768458-agXVu0ILIOU?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product3", "https://images.unsplash.com/photo-1568584711271-096ca3376931?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail3", "https://images.unsplash.com/photo-1737558596633-VqMW9OwAwig?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product4", "https://images.unsplash.com/photo-1652299035422-7waRESfE464?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail4", "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product5", "https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail5", "https://images.unsplash.com/photo-1659466100158-PchPR1WcE1Q?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product6", "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail6", "https://images.unsplash.com/photo-1615485925879-9729b59f5d62?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product7", "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail7", "https://images.unsplash.com/photo-1709402812245-wguVC8oG3qw?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product8", "https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product-detail8", "https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=1200&q=80");
+    }
 
     private final List<Map<String, Object>> categories = new ArrayList<>();
     private final List<Map<String, Object>> products = new ArrayList<>();
@@ -44,9 +81,19 @@ public class MockDataService {
     private final AtomicLong aiSessionIdSeq = new AtomicLong(5000);
     private final AtomicLong aiMessageIdSeq = new AtomicLong(10000);
     private final Map<Long, Map<String, Object>> merchantByUserId = new ConcurrentHashMap<>();
+    private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
+
+    public RuntimeDataService(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void init() {
+        if (loadStateFromDb()) {
+            return;
+        }
         if (!categories.isEmpty()) {
             return;
         }
@@ -55,11 +102,14 @@ public class MockDataService {
         categories.add(category(2L, 0L, "新鲜蔬菜"));
         categories.add(category(3L, 0L, "有机食品"));
 
-        products.add(product(1L, 1L, "进口车厘子", "精选智利车厘子，果肉饱满，甜度高", 99, 128, 520, 280, 1));
-        products.add(product(2L, 2L, "有机西红柿", "自然成熟，酸甜多汁", 15, 20, 980, 160, 1));
-        products.add(product(3L, 3L, "有机黄瓜", "清脆爽口，冷链到家", 8, 12, 820, 120, 1));
-        products.add(product(4L, 1L, "高山苹果", "高海拔产区，脆甜清香", 12, 18, 760, 220, 1));
-        products.add(product(5L, 2L, "云南生菜", "新鲜直采，沙拉优选", 6, 9, 640, 95, 0));
+        products.add(product(1L, 1L, "智利车厘子2J", "当季海运到港，果径均匀，甜脆多汁，适合家庭尝鲜", 39.90, 49.90, "500g/盒", 360, 268, 1));
+        products.add(product(2L, 2L, "精品圣女果", "本地温室直采，果皮薄、酸甜平衡，适合沙拉与即食", 8.80, 12.80, "500g/盒", 780, 196, 1));
+        products.add(product(3L, 3L, "有机旱黄瓜", "通过有机种植管理，口感清脆，冷藏后风味更佳", 6.90, 8.90, "500g/袋", 720, 143, 1));
+        products.add(product(4L, 1L, "红富士苹果礼盒", "精选中大果，脆甜爽口，适合家庭和送礼", 19.80, 25.80, "2kg/箱", 640, 238, 1));
+        products.add(product(5L, 2L, "奶油生菜", "叶片鲜嫩，适合轻食沙拉和火锅配菜", 5.60, 7.20, "300g/份", 580, 122, 0));
+        products.add(product(6L, 1L, "麒麟西瓜小果", "单果约2.5kg，皮薄瓤红，冷藏口感更佳", 29.90, 36.00, "约2.5kg/个", 240, 175, 1));
+        products.add(product(7L, 3L, "有机上海青", "基地当日采收，叶梗脆嫩，适合清炒或汆烫", 7.50, 9.80, "500g/袋", 500, 110, 1));
+        products.add(product(8L, 3L, "贝贝南瓜", "粉糯香甜，蒸烤皆宜，家庭常备食材", 12.90, 16.90, "900g/个", 430, 98, 1));
 
         Map<String, Object> defaultMerchant = new LinkedHashMap<>();
         defaultMerchant.put("id", 1L);
@@ -130,8 +180,9 @@ public class MockDataService {
             traceByProduct.put(productId, trace(productId, String.valueOf(product.get("name"))));
         }
 
-        circlePosts.add(circlePost(1L, "今日采摘：高山苹果", "今早 5 点采摘，冷链直发，欢迎下单。", Arrays.asList(image("circle-1"), image("circle-2")), Arrays.asList(4L)));
-        circlePosts.add(circlePost(2L, "有机黄瓜生长日记", "全程绿色种植，不打催熟剂。", Collections.singletonList(image("circle-3")), Arrays.asList(3L, 2L)));
+        circlePosts.add(circlePost(1L, "今日到货：智利车厘子", "凌晨分拣入库，上午完成冷链发车，现货充足。", Arrays.asList(image("circle-1"), image("circle-2")), Arrays.asList(1L, 4L)));
+        circlePosts.add(circlePost(2L, "有机绿叶菜采收记录", "上海青与生菜已完成农残抽检，下午批次可下单。", Collections.singletonList(image("circle-3")), Arrays.asList(7L, 5L)));
+        persistState();
     }
 
     public List<Map<String, Object>> listCategoryTree() {
@@ -1342,7 +1393,7 @@ public class MockDataService {
     }
 
     private Map<String, Object> product(Long id, Long categoryId, String name, String description,
-                                        double price, double originPrice, int stock, int sales, int auditStatus) {
+                                        double price, double originPrice, String unit, int stock, int sales, int auditStatus) {
         String img = image("product" + id);
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", id);
@@ -1354,7 +1405,7 @@ public class MockDataService {
         item.put("price", BigDecimal.valueOf(price));
         item.put("originalPrice", BigDecimal.valueOf(originPrice));
         item.put("stock", stock);
-        item.put("unit", "份");
+        item.put("unit", unit);
         item.put("sales", sales);
         item.put("mainImage", img);
         item.put("images", Arrays.asList(img, image("product-detail" + id)));
@@ -1365,18 +1416,18 @@ public class MockDataService {
     private Map<String, Object> sampleOrder(Long id, String status, int adminStatus) {
         Map<String, Object> p1 = new LinkedHashMap<>();
         p1.put("id", 2L);
-        p1.put("name", "有机西红柿");
+        p1.put("name", "精品圣女果");
         p1.put("images", Collections.singletonList(image("tomato")));
-        p1.put("spec", "1kg/袋");
-        p1.put("price", 15.0);
+        p1.put("spec", "500g/盒");
+        p1.put("price", 8.8);
         p1.put("quantity", 2);
 
         Map<String, Object> p2 = new LinkedHashMap<>();
         p2.put("id", 4L);
-        p2.put("name", "高山苹果");
+        p2.put("name", "红富士苹果礼盒");
         p2.put("images", Collections.singletonList(image("apple")));
         p2.put("spec", "2kg/箱");
-        p2.put("price", 36.0);
+        p2.put("price", 19.8);
         p2.put("quantity", 1);
 
         Map<String, Object> order = new LinkedHashMap<>();
@@ -1384,7 +1435,7 @@ public class MockDataService {
         order.put("userId", 1L);
         order.put("merchantId", 1L);
         order.put("orderNumber", "FV202602" + (1000 + id));
-        order.put("totalAmount", 66.0);
+        order.put("totalAmount", 37.4);
         order.put("status", status);
         order.put("adminStatus", adminStatus);
         order.put("paymentMethod", "微信支付");
@@ -1544,6 +1595,10 @@ public class MockDataService {
     }
 
     private String image(String tag) {
+        String directUrl = IMAGE_URLS.get(tag);
+        if (directUrl != null) {
+            return directUrl;
+        }
         return "https://picsum.photos/seed/" + tag + "/800/600";
     }
 
@@ -1577,6 +1632,225 @@ public class MockDataService {
                 .map(m -> String.valueOf(m.getOrDefault("shopName", m.get("name"))))
                 .findFirst()
                 .orElse("未知商家");
+    }
+
+    public void persistStateSilently() {
+        try {
+            persistState();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private boolean loadStateFromDb() {
+        try {
+            jdbcTemplate.execute(
+                    "CREATE TABLE IF NOT EXISTS biz_runtime_state ("
+                            + "state_key VARCHAR(64) PRIMARY KEY,"
+                            + "state_json LONGTEXT NOT NULL,"
+                            + "update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                            + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+            );
+            List<String> rows = jdbcTemplate.query(
+                    "SELECT state_json FROM biz_runtime_state WHERE state_key = ? LIMIT 1",
+                    ps -> ps.setString(1, STATE_KEY),
+                    (rs, rowNum) -> rs.getString(1)
+            );
+            if (rows == null || rows.isEmpty() || rows.get(0) == null || rows.get(0).trim().isEmpty()) {
+                return false;
+            }
+            Map<String, Object> state = objectMapper.readValue(rows.get(0), new TypeReference<Map<String, Object>>() {
+            });
+            restoreState(state);
+            return !categories.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void persistState() {
+        Map<String, Object> state = new LinkedHashMap<>();
+        state.put("categories", categories);
+        state.put("products", products);
+        state.put("merchants", merchants);
+        state.put("userOrders", userOrders);
+        state.put("complaints", complaints);
+        state.put("banners", banners);
+        state.put("notices", notices);
+        state.put("circlePosts", circlePosts);
+        state.put("traceTemplates", traceTemplates);
+        state.put("traceByProduct", traceByProduct);
+        state.put("aiHistoryByUser", aiHistoryByUser);
+        state.put("aiActiveSessionByUser", aiActiveSessionByUser);
+        state.put("favoriteProductIdsByUser", favoriteProductIdsByUser);
+        state.put("followMerchantIdsByUser", followMerchantIdsByUser);
+        state.put("orderReviews", orderReviews);
+        state.put("systemSettings", systemSettings);
+        state.put("rolePermissions", rolePermissions);
+        state.put("merchantByUserId", merchantByUserId);
+
+        Map<String, Object> seq = new LinkedHashMap<>();
+        seq.put("orderIdSeq", orderIdSeq.get());
+        seq.put("merchantIdSeq", merchantIdSeq.get());
+        seq.put("circlePostIdSeq", circlePostIdSeq.get());
+        seq.put("complaintIdSeq", complaintIdSeq.get());
+        seq.put("productIdSeq", productIdSeq.get());
+        seq.put("bannerIdSeq", bannerIdSeq.get());
+        seq.put("noticeIdSeq", noticeIdSeq.get());
+        seq.put("traceTemplateIdSeq", traceTemplateIdSeq.get());
+        seq.put("aiSessionIdSeq", aiSessionIdSeq.get());
+        seq.put("aiMessageIdSeq", aiMessageIdSeq.get());
+        state.put("sequences", seq);
+
+        try {
+            String json = objectMapper.writeValueAsString(state);
+            jdbcTemplate.update(
+                    "INSERT INTO biz_runtime_state(state_key, state_json, update_time) VALUES(?, ?, NOW()) "
+                            + "ON DUPLICATE KEY UPDATE state_json = VALUES(state_json), update_time = NOW()",
+                    STATE_KEY, json
+            );
+        } catch (Exception ignored) {
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void restoreState(Map<String, Object> state) {
+        categories.clear();
+        categories.addAll(castListMap(state.get("categories")));
+        products.clear();
+        products.addAll(castListMap(state.get("products")));
+        merchants.clear();
+        merchants.addAll(castListMap(state.get("merchants")));
+        userOrders.clear();
+        userOrders.addAll(castListMap(state.get("userOrders")));
+        complaints.clear();
+        complaints.addAll(castListMap(state.get("complaints")));
+        banners.clear();
+        banners.addAll(castListMap(state.get("banners")));
+        notices.clear();
+        notices.addAll(castListMap(state.get("notices")));
+        circlePosts.clear();
+        circlePosts.addAll(castListMap(state.get("circlePosts")));
+        traceTemplates.clear();
+        traceTemplates.addAll(castListMap(state.get("traceTemplates")));
+        orderReviews.clear();
+        orderReviews.addAll(castListMap(state.get("orderReviews")));
+
+        traceByProduct.clear();
+        traceByProduct.putAll(convertMapLongMap(state.get("traceByProduct")));
+        aiHistoryByUser.clear();
+        aiHistoryByUser.putAll(convertMapLongListMap(state.get("aiHistoryByUser")));
+        aiActiveSessionByUser.clear();
+        aiActiveSessionByUser.putAll(convertMapLongLong(state.get("aiActiveSessionByUser")));
+        favoriteProductIdsByUser.clear();
+        favoriteProductIdsByUser.putAll(convertMapLongSetLong(state.get("favoriteProductIdsByUser")));
+        followMerchantIdsByUser.clear();
+        followMerchantIdsByUser.putAll(convertMapLongSetLong(state.get("followMerchantIdsByUser")));
+        merchantByUserId.clear();
+        merchantByUserId.putAll(convertMapLongMap(state.get("merchantByUserId")));
+
+        systemSettings.clear();
+        if (state.get("systemSettings") instanceof Map) {
+            systemSettings.putAll((Map<String, Object>) state.get("systemSettings"));
+        }
+
+        rolePermissions.clear();
+        if (state.get("rolePermissions") instanceof Map) {
+            Map<String, Object> raw = (Map<String, Object>) state.get("rolePermissions");
+            for (Map.Entry<String, Object> entry : raw.entrySet()) {
+                Set<String> values = new LinkedHashSet<>();
+                if (entry.getValue() instanceof List) {
+                    for (Object item : (List<?>) entry.getValue()) {
+                        values.add(String.valueOf(item));
+                    }
+                }
+                rolePermissions.put(entry.getKey(), values);
+            }
+        }
+
+        if (state.get("sequences") instanceof Map) {
+            Map<String, Object> seq = (Map<String, Object>) state.get("sequences");
+            orderIdSeq.set(toLong(seq.get("orderIdSeq")));
+            merchantIdSeq.set(toLong(seq.get("merchantIdSeq")));
+            circlePostIdSeq.set(toLong(seq.get("circlePostIdSeq")));
+            complaintIdSeq.set(toLong(seq.get("complaintIdSeq")));
+            productIdSeq.set(toLong(seq.get("productIdSeq")));
+            bannerIdSeq.set(toLong(seq.get("bannerIdSeq")));
+            noticeIdSeq.set(toLong(seq.get("noticeIdSeq")));
+            traceTemplateIdSeq.set(toLong(seq.get("traceTemplateIdSeq")));
+            aiSessionIdSeq.set(toLong(seq.get("aiSessionIdSeq")));
+            aiMessageIdSeq.set(toLong(seq.get("aiMessageIdSeq")));
+        }
+    }
+
+    private Map<Long, Map<String, Object>> convertMapLongMap(Object raw) {
+        Map<Long, Map<String, Object>> map = new LinkedHashMap<>();
+        if (!(raw instanceof Map)) {
+            return map;
+        }
+        Map<?, ?> source = (Map<?, ?>) raw;
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
+            Long key = toLong(entry.getKey());
+            if (entry.getValue() instanceof Map) {
+                map.put(key, new LinkedHashMap<>((Map<String, Object>) entry.getValue()));
+            }
+        }
+        return map;
+    }
+
+    private Map<Long, List<Map<String, Object>>> convertMapLongListMap(Object raw) {
+        Map<Long, List<Map<String, Object>>> map = new LinkedHashMap<>();
+        if (!(raw instanceof Map)) {
+            return map;
+        }
+        Map<?, ?> source = (Map<?, ?>) raw;
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
+            Long key = toLong(entry.getKey());
+            List<Map<String, Object>> values = new ArrayList<>();
+            if (entry.getValue() instanceof List) {
+                for (Object item : (List<?>) entry.getValue()) {
+                    if (item instanceof Map) {
+                        values.add(new LinkedHashMap<>((Map<String, Object>) item));
+                    }
+                }
+            }
+            map.put(key, values);
+        }
+        return map;
+    }
+
+    private Map<Long, Set<Long>> convertMapLongSetLong(Object raw) {
+        Map<Long, Set<Long>> map = new LinkedHashMap<>();
+        if (!(raw instanceof Map)) {
+            return map;
+        }
+        Map<?, ?> source = (Map<?, ?>) raw;
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
+            Long key = toLong(entry.getKey());
+            Set<Long> values = new LinkedHashSet<>();
+            if (entry.getValue() instanceof List) {
+                for (Object item : (List<?>) entry.getValue()) {
+                    values.add(toLong(item));
+                }
+            } else if (entry.getValue() instanceof Set) {
+                for (Object item : (Set<?>) entry.getValue()) {
+                    values.add(toLong(item));
+                }
+            }
+            map.put(key, values);
+        }
+        return map;
+    }
+
+    private Map<Long, Long> convertMapLongLong(Object raw) {
+        Map<Long, Long> map = new LinkedHashMap<>();
+        if (!(raw instanceof Map)) {
+            return map;
+        }
+        Map<?, ?> source = (Map<?, ?>) raw;
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
+            map.put(toLong(entry.getKey()), toLong(entry.getValue()));
+        }
+        return map;
     }
 
     private Map<String, Object> banner(Long id, String title, String imageUrl, String targetUrl) {
