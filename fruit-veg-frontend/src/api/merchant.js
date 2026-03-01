@@ -15,6 +15,7 @@ export const deleteMerchantCirclePost = (id) => request.delete(`/merchant/circle
 
 // 订单履约
 export const getMerchantOrderList = (params) => request.get('/merchant/orders', { params })
+export const getMerchantOrderDetail = (id) => request.get(`/merchant/orders/${id}`)
 export const shipMerchantOrder = (id, data) => request.put(`/merchant/orders/${id}/ship`, data)
 
 // 商家商品与溯源
@@ -25,3 +26,6 @@ export const getMerchantTraceList = (params) => request.get('/merchant/trace/lis
 export const saveMerchantTrace = (productId, data) => request.put(`/merchant/trace/${productId}`, data)
 export const getMerchantTraceQrcode = (productId) => request.get(`/merchant/trace/${productId}/qrcode`)
 export const getMerchantStats = () => request.get('/merchant/stats')
+
+// 商家店铺对外展示
+export const getPublicMerchantDetail = (id) => request.get(`/merchant/public/${id}`)

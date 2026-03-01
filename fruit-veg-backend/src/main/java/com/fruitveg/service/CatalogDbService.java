@@ -81,7 +81,7 @@ public class CatalogDbService {
     }
 
     public Map<String, Object> listProducts(Integer page, Integer size, String keyword, String sortBy, Long categoryId,
-                                            Double minPrice, Double maxPrice) {
+                                            Double minPrice, Double maxPrice, Long merchantId) {
         QueryWrapper<BizProduct> wrapper = new QueryWrapper<>();
         wrapper.eq("status", 1);
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -89,6 +89,9 @@ public class CatalogDbService {
         }
         if (categoryId != null) {
             wrapper.eq("category_id", categoryId);
+        }
+        if (merchantId != null) {
+            wrapper.eq("merchant_id", merchantId);
         }
         if (minPrice != null) {
             wrapper.ge("price", minPrice);
@@ -109,9 +112,10 @@ public class CatalogDbService {
 
         List<Map<String, Object>> dbRows = productMapper.selectMaps(wrapper);
         Map<Long, String> categoryNameMap = loadCategoryNameMap();
+        Map<Long, Map<String, Object>> merchantMap = loadMerchantMap();
 
         List<Map<String, Object>> rows = dbRows.stream()
-                .map(row -> toProductMap(row, categoryNameMap))
+                .map(row -> toProductMap(row, categoryNameMap, merchantMap))
                 .collect(Collectors.toList());
 
         int current = page == null || page < 1 ? 1 : page;
@@ -134,15 +138,19 @@ public class CatalogDbService {
                         .orderByDesc("sales")
                         .last("limit 6")
         );
-        Map<Long, String> merchantNameMap = loadMerchantNameMap();
+        Map<Long, Map<String, Object>> merchantMap = loadMerchantMap();
         return products.stream().map(row -> {
             Map<String, Object> result = new LinkedHashMap<>();
             Long id = getLong(row, "id");
             Long merchantId = getLong(row, "merchant_id", "merchantId");
+            Map<String, Object> merchant = merchantMap.getOrDefault(merchantId, defaultMerchant(merchantId));
             result.put("id", id);
             result.put("name", String.valueOf(row.getOrDefault("name", "")));
             result.put("description", String.valueOf(row.getOrDefault("description", "")));
-            result.put("merchantName", merchantNameMap.getOrDefault(merchantId, "绿源果蔬店"));
+            result.put("merchantId", merchantId);
+            result.put("merchantName", merchant.get("shopName"));
+            result.put("merchantAvatar", merchant.get("shopLogo"));
+            result.put("merchantAddress", merchant.get("address"));
             result.put("price", toBigDecimal(row.get("price")));
             result.put("originalPrice", toBigDecimal(row.getOrDefault("original_price", row.get("originalPrice"))));
             result.put("image", firstNonBlank(
@@ -164,8 +172,8 @@ public class CatalogDbService {
         }
 
         Map<Long, String> categoryNameMap = loadCategoryNameMap();
-        Map<Long, String> merchantNameMap = loadMerchantNameMap();
-        Map<String, Object> result = toProductMap(row, categoryNameMap);
+        Map<Long, Map<String, Object>> merchantMap = loadMerchantMap();
+        Map<String, Object> result = toProductMap(row, categoryNameMap, merchantMap);
 
         BigDecimal basePrice = toBigDecimal(row.get("price"));
         List<Map<String, Object>> specs = new ArrayList<>();
@@ -174,14 +182,18 @@ public class CatalogDbService {
         result.put("specs", specs);
 
         Long merchantId = getLong(row, "merchant_id", "merchantId");
-        Map<String, Object> shop = new LinkedHashMap<>();
-        shop.put("id", merchantId);
-        shop.put("shopName", merchantNameMap.getOrDefault(merchantId, "绿源果蔬店"));
-        shop.put("logoUrl", result.get("mainImage"));
-        shop.put("description", "冷链直达，48小时内送达");
-        shop.put("rating", 4.8);
+        Map<String, Object> merchant = merchantMap.getOrDefault(merchantId, defaultMerchant(merchantId));
+        Map<String, Object> shop = new LinkedHashMap<>(merchant);
         result.put("shop", shop);
         return result;
+    }
+
+    public Map<String, Object> getMerchantInfo(Long merchantId) {
+        Map<String, Object> merchant = loadMerchantMap().get(merchantId);
+        if (merchant == null) {
+            return null;
+        }
+        return new LinkedHashMap<>(merchant);
     }
 
     public Map<String, Object> getTraceDetail(Long productId) {
@@ -219,7 +231,7 @@ public class CatalogDbService {
         return result;
     }
 
-    private Map<String, Object> toProductMap(Map<String, Object> row, Map<Long, String> categoryNameMap) {
+    private Map<String, Object> toProductMap(Map<String, Object> row, Map<Long, String> categoryNameMap, Map<Long, Map<String, Object>> merchantMap) {
         Map<String, Object> result = new LinkedHashMap<>();
         Long id = getLong(row, "id");
         Long merchantId = getLong(row, "merchant_id", "merchantId");
@@ -245,6 +257,10 @@ public class CatalogDbService {
         result.put("mainImage", mainImage);
         result.put("images", parseImages(String.valueOf(row.getOrDefault("images", "")), mainImage));
         result.put("auditStatus", toInt(row.get("status"), 0) == 1 ? 1 : 0);
+        Map<String, Object> merchant = merchantMap.getOrDefault(merchantId, defaultMerchant(merchantId));
+        result.put("merchantName", merchant.get("shopName"));
+        result.put("merchantAvatar", merchant.get("shopLogo"));
+        result.put("merchantAddress", merchant.get("address"));
         return result;
     }
 
@@ -273,13 +289,54 @@ public class CatalogDbService {
     }
 
     private Map<Long, String> loadMerchantNameMap() {
+        return loadMerchantMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, item -> String.valueOf(item.getValue().get("shopName"))));
+    }
+
+    private Map<Long, Map<String, Object>> loadMerchantMap() {
         return merchantMapper.selectMaps(new QueryWrapper<BizMerchant>().eq("status", 1))
                 .stream()
                 .collect(Collectors.toMap(
                         row -> getLong(row, "id"),
-                        row -> String.valueOf(row.getOrDefault("shop_name", row.getOrDefault("shopName", "绿源果蔬店"))),
+                        row -> {
+                            Long id = getLong(row, "id");
+                            Map<String, Object> merchant = new LinkedHashMap<>();
+                            merchant.put("id", id);
+                            merchant.put("shopName", firstNonBlank(
+                                    String.valueOf(row.getOrDefault("shop_name", "")),
+                                    String.valueOf(row.getOrDefault("shopName", "")),
+                                    "绿源果蔬店"
+                            ));
+                            merchant.put("shopLogo", firstNonBlank(
+                                    String.valueOf(row.getOrDefault("shop_logo", "")),
+                                    String.valueOf(row.getOrDefault("shopLogo", "")),
+                                    DEFAULT_IMAGE
+                            ));
+                            merchant.put("shopDesc", firstNonBlank(
+                                    String.valueOf(row.getOrDefault("shop_desc", "")),
+                                    String.valueOf(row.getOrDefault("shopDesc", "")),
+                                    "冷链直达，48小时内送达"
+                            ));
+                            merchant.put("address", firstNonBlank(
+                                    String.valueOf(row.getOrDefault("address", "")),
+                                    "郑州市"
+                            ));
+                            merchant.put("rating", 4.8);
+                            return merchant;
+                        },
                         (a, b) -> a
                 ));
+    }
+
+    private Map<String, Object> defaultMerchant(Long merchantId) {
+        Map<String, Object> merchant = new LinkedHashMap<>();
+        merchant.put("id", merchantId);
+        merchant.put("shopName", "绿源果蔬店");
+        merchant.put("shopLogo", DEFAULT_IMAGE);
+        merchant.put("shopDesc", "冷链直达，48小时内送达");
+        merchant.put("address", "郑州市");
+        merchant.put("rating", 4.8);
+        return merchant;
     }
 
     private Map<String, Object> spec(Long id, String name, BigDecimal price) {

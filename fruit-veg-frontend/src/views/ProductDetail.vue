@@ -134,12 +134,13 @@
             <h3>商家店铺</h3>
           </template>
           <div class="shop-info">
-            <el-avatar :size="60" :src="product.shop.logo">
+            <el-avatar :size="60" :src="product.shop.logo" class="shop-clickable" @click="navigateToShop">
               {{ product.shop.name.charAt(0).toUpperCase() }}
             </el-avatar>
             <div class="shop-details">
-              <h4>{{ product.shop.name }}</h4>
+              <h4 class="shop-clickable" @click="navigateToShop">{{ product.shop.name }}</h4>
               <p>{{ product.shop.description }}</p>
+              <p>店铺位置：{{ product.shop.address || '郑州市' }}</p>
               <div class="shop-rating">
                 <el-rate
                   :model-value="product.shop.rating"
@@ -251,7 +252,7 @@ const navigateToTrace = () => {
 }
 
 const navigateToShop = () => {
-  navigate('/merchant/shop')
+  navigate(`/store/${product.shop.id}`)
 }
 
 const navigateToAiExpert = () => {
@@ -279,6 +280,7 @@ const fetchProductDetail = async () => {
       name: data.shop?.shopName || data.shop?.name || '商家店铺',
       logo: data.shop?.logo || data.shop?.logoUrl || '',
       description: data.shop?.description || data.shop?.shopDescription || '优质果蔬源头供应',
+      address: data.shop?.address || '',
       rating: Number(data.shop?.rating || 4.8)
     }
     // 设置默认规格
@@ -445,6 +447,10 @@ onMounted(() => {
 
 .shop-details h4 {
   margin-bottom: 5px;
+}
+
+.shop-clickable {
+  cursor: pointer;
 }
 
 .shop-details p {

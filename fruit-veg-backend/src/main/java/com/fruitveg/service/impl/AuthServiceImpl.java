@@ -1,8 +1,9 @@
 package com.fruitveg.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fruitveg.entity.BizMerchant;
 import com.fruitveg.entity.SysUser;
+import com.fruitveg.mapper.BizMerchantMapper;
 import com.fruitveg.mapper.SysUserMapper;
 import com.fruitveg.service.AuthService;
 import com.fruitveg.utils.JwtUtils;
@@ -36,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Autowired
+    private BizMerchantMapper bizMerchantMapper;
+
     @Override
     public AuthVO register(RegisterVO registerVO) {
         // 检查用户是否已存在
@@ -62,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
         sysUserMapper.insert(sysUser);
 
         // 生成token
-        String role = "admin".equalsIgnoreCase(sysUser.getUsername()) ? "ADMIN" : "USER";
+        String role = resolveRole(sysUser);
         String token = jwtUtils.generateToken(sysUser.getId(), sysUser.getUsername(), role);
 
         // 转换用户信息
@@ -99,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 生成token
-        String role = "admin".equalsIgnoreCase(sysUser.getUsername()) ? "ADMIN" : "USER";
+        String role = resolveRole(sysUser);
         String token = jwtUtils.generateToken(sysUser.getId(), sysUser.getUsername(), role);
 
         // 转换用户信息
@@ -128,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
         if (sysUser.getStatus() == 0) {
             throw new RuntimeException("用户已被禁用");
         }
-        String role = "admin".equalsIgnoreCase(sysUser.getUsername()) ? "ADMIN" : "USER";
+        String role = resolveRole(sysUser);
         String token = jwtUtils.generateToken(sysUser.getId(), sysUser.getUsername(), role);
 
         UserInfoVO userInfoVO = new UserInfoVO();
@@ -139,5 +143,16 @@ public class AuthServiceImpl implements AuthService {
         authVO.setToken(token);
         authVO.setUserInfo(userInfoVO);
         return authVO;
+    }
+
+    private String resolveRole(SysUser sysUser) {
+        if ("admin".equalsIgnoreCase(sysUser.getUsername())) {
+            return "ADMIN";
+        }
+        BizMerchant merchant = bizMerchantMapper.selectByUserId(sysUser.getId());
+        if (merchant != null && merchant.getStatus() != null && merchant.getStatus() == 1) {
+            return "MERCHANT";
+        }
+        return "USER";
     }
 }

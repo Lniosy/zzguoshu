@@ -19,9 +19,12 @@
         <el-card v-for="post in list" :key="post.id" class="post-card">
           <template #header>
             <div class="post-head">
-              <div>
+              <div class="merchant-entry" @click="navigate(`/store/${post.merchantId}`)">
+                <el-avatar :size="38" :src="post.merchantAvatar">{{ post.merchantName?.[0] || '店' }}</el-avatar>
+                <div>
                 <h3>{{ post.title }}</h3>
                 <small>{{ post.merchantName }} · {{ post.createTime }}</small>
+                </div>
               </div>
               <div class="head-right">
                 <el-tag effect="plain">{{ post.viewCount }} 浏览</el-tag>
@@ -52,7 +55,7 @@
           <template #header><h3>我关注的商家</h3></template>
           <el-empty v-if="!followedMerchants.length" description="还没有关注商家" />
           <div v-for="merchant in followedMerchants" :key="merchant.id" class="follow-item">
-            <div class="name">{{ merchant.shopName || merchant.name }}</div>
+            <div class="name" @click="navigate(`/store/${merchant.id}`)">{{ merchant.shopName || merchant.name }}</div>
             <el-button size="small" link type="danger" @click="removeFollowedMerchant(merchant.id)">取消关注</el-button>
           </div>
         </el-card>
@@ -201,6 +204,7 @@ onMounted(async () => {
 .page-header h2 { margin: 0; }
 .post-card { margin-bottom: 14px; }
 .post-head { display: flex; justify-content: space-between; align-items: center; }
+.merchant-entry { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .head-right { display: flex; gap: 8px; align-items: center; }
 .post-head h3 { margin: 0 0 4px; }
 .post-content { color: #4c6358; line-height: 1.7; }
@@ -225,5 +229,6 @@ onMounted(async () => {
 .follow-item .name {
   color: #2f3d33;
   font-weight: 500;
+  cursor: pointer;
 }
 </style>

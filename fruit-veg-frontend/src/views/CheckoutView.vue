@@ -47,7 +47,6 @@
               <el-select v-model="paymentMethod" style="width: 100%">
                 <el-option label="微信支付" value="微信支付" />
                 <el-option label="支付宝" value="支付宝" />
-                <el-option label="余额支付" value="余额支付" />
               </el-select>
             </el-form-item>
           </el-form>
@@ -94,6 +93,11 @@ const submitOrder = async () => {
   }
   if (items.value.length === 0) {
     ElMessage.warning('购物车为空')
+    return
+  }
+  const merchantIds = new Set(items.value.map(item => Number(item.merchantId || 0)).filter(id => id > 0))
+  if (merchantIds.size > 1) {
+    ElMessage.warning('一次下单仅支持同一商家商品，请按商家分开下单')
     return
   }
 

@@ -78,9 +78,22 @@ public class MerchantController {
         return Result.success(mockDataService.listMerchantOrders(getUserId(request), page, pageSize, status, orderNo));
     }
 
+    @GetMapping("/orders/{id}")
+    public Result<Map<String, Object>> merchantOrderDetail(@PathVariable Long id, HttpServletRequest request) {
+        Map<String, Object> detail = mockDataService.getMerchantOrderDetail(getUserId(request), id);
+        if (detail == null) {
+            return Result.error(404, "订单不存在或无权限");
+        }
+        return Result.success(detail);
+    }
+
     @PutMapping("/orders/{id}/ship")
     public Result<Void> shipOrder(@PathVariable Long id,
-                                  @RequestBody(required = false) Map<String, String> payload) {
+                                  @RequestBody(required = false) Map<String, String> payload,
+                                  HttpServletRequest request) {
+        if (mockDataService.getMerchantOrderDetail(getUserId(request), id) == null) {
+            return Result.error(404, "订单不存在或无权限");
+        }
         String logisticsCompany = payload == null ? null : payload.get("logisticsCompany");
         String logisticsNo = payload == null ? null : payload.get("logisticsNo");
         return mockDataService.shipOrder(id, logisticsCompany, logisticsNo)

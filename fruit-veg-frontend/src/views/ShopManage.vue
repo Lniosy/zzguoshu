@@ -144,8 +144,9 @@
                   </template>
                 </el-table-column>
                 <el-table-column prop="logisticsNo" label="物流单号" min-width="180" />
-                <el-table-column label="操作" width="140" fixed="right">
+                <el-table-column label="操作" width="200" fixed="right">
                   <template #default="{ row }">
+                    <el-button link @click="navigate(`/orders/${row.id}`)">查看详情</el-button>
                     <el-button v-if="row.status === 'shipped'" link type="primary" @click="openShipDialog(row)">去发货</el-button>
                     <el-tag v-else size="small">已处理</el-tag>
                   </template>

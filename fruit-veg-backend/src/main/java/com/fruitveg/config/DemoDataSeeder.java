@@ -47,8 +47,11 @@ public class DemoDataSeeder implements CommandLineRunner {
     private void seedMerchant() {
         jdbcTemplate.update(
                 "INSERT INTO biz_merchant (id, user_id, shop_name, shop_logo, shop_desc, contact_name, contact_phone, business_license, food_license, address, status, audit_time, deleted, create_time, update_time) VALUES " +
-                        "(1, 1, '绿源果蔬店', '/api/images/VCG211570378418.jpg', " +
-                        "'专注于高品质果蔬配送', '张三', '13900139000', '', '', '郑州市金水区农业路88号', 1, NOW(), 0, NOW(), NOW()) " +
+                        "(1, 1, '绿源果蔬店', '/api/images/VCG211570378418.jpg', '专注于高品质果蔬配送', '张三', '13900139000', '', '', '郑州市金水区农业路88号', 1, NOW(), 0, NOW(), NOW())," +
+                        "(2, 2, '中牟鲜采果园', '/api/images/VCG211563741694.jpg', '郑州周边基地直供，当日采收配送', '李四', '13900139001', '', '', '郑州市中牟县商都路168号', 1, NOW(), 0, NOW(), NOW())," +
+                        "(3, 3, '惠济绿叶仓', '/api/images/VCG211315932533.jpg', '专注叶菜和有机蔬菜冷链配送', '王五', '13900139002', '', '', '郑州市惠济区开元路66号', 1, NOW(), 0, NOW(), NOW())," +
+                        "(4, 4, '果岭优选', '/api/images/VCG211327413757.jpg', '精品水果礼盒与家庭常购水果', '赵六', '13900139003', '', '', '郑州市郑东新区商务外环路99号', 1, NOW(), 0, NOW(), NOW())," +
+                        "(5, 5, '南郊时蔬集', '/api/images/VCG211500639828.jpg', '南部城区时令果蔬，2小时同城达', '钱七', '13900139004', '', '', '郑州市二七区大学南路188号', 1, NOW(), 0, NOW(), NOW()) " +
                         "ON DUPLICATE KEY UPDATE shop_name=VALUES(shop_name), shop_logo=VALUES(shop_logo), shop_desc=VALUES(shop_desc), status=1, deleted=0, update_time=NOW()"
         );
     }
@@ -58,13 +61,13 @@ public class DemoDataSeeder implements CommandLineRunner {
                 "INSERT INTO biz_product (id, merchant_id, category_id, name, main_image, images, price, original_price, stock, unit, description, sales, status, sort, deleted, create_time, update_time) VALUES " +
                         "(1,1,1,'智利车厘子2J','/api/images/VCG211490364476.webp','[\"/api/images/VCG211490364476.webp\",\"/api/images/VCG211324068414.jpg\"]',32.80,39.80,360,'500g/盒','当季海运到港，果径均匀，甜脆多汁，适合家庭尝鲜',268,1,1,0,NOW(),NOW())," +
                         "(2,1,2,'精品圣女果','/api/images/VCG211412015500.webp','[\"/api/images/VCG211412015500.webp\",\"/api/images/VCG211412015500.webp\"]',6.90,8.90,780,'500g/盒','本地温室直采，果皮薄、酸甜平衡，适合沙拉与即食',196,1,2,0,NOW(),NOW())," +
-                        "(3,1,3,'有机旱黄瓜','/api/images/VCG211450687680.webp','[\"/api/images/VCG211450687680.webp\",\"/api/images/VCG211450687680.webp\"]',4.90,6.90,720,'500g/袋','通过有机种植管理，口感清脆，冷藏后风味更佳',143,1,3,0,NOW(),NOW())," +
-                        "(4,1,1,'红富士苹果礼盒','/api/images/VCG211415338609.webp','[\"/api/images/VCG211415338609.webp\",\"/api/images/VCG211415338609.webp\"]',21.80,27.80,640,'2kg/箱','精选中大果，脆甜爽口，适合家庭和送礼',238,1,4,0,NOW(),NOW())," +
-                        "(5,1,2,'奶油生菜','/api/images/VCG211375299502.webp','[\"/api/images/VCG211375299502.webp\",\"/api/images/VCG211375299502.webp\"]',4.80,6.20,580,'300g/份','叶片鲜嫩，适合轻食沙拉和火锅配菜',122,1,5,0,NOW(),NOW())," +
-                        "(6,1,1,'麒麟西瓜小果','/api/images/VCG211583441112.webp','[\"/api/images/VCG211583441112.webp\",\"/api/images/VCG211583441112.webp\"]',18.90,24.90,240,'约2.5kg/个','单果约2.5kg，皮薄瓤红，冷藏口感更佳',175,1,6,0,NOW(),NOW())," +
-                        "(7,1,3,'有机上海青','/api/images/VCG211564814308.webp','[\"/api/images/VCG211564814308.webp\",\"/api/images/VCG211564814308.webp\"]',5.80,7.80,500,'500g/袋','基地当日采收，叶梗脆嫩，适合清炒或汆烫',110,1,7,0,NOW(),NOW())," +
-                        "(8,1,3,'贝贝南瓜','/api/images/VCG211429867102.webp','[\"/api/images/VCG211429867102.webp\"]',8.90,11.90,430,'900g/个','粉糯香甜，蒸烤皆宜，家庭常备食材',98,1,8,0,NOW(),NOW()) " +
-                        "ON DUPLICATE KEY UPDATE category_id=VALUES(category_id), name=VALUES(name), main_image=VALUES(main_image), images=VALUES(images), price=VALUES(price), original_price=VALUES(original_price), stock=VALUES(stock), unit=VALUES(unit), description=VALUES(description), sales=VALUES(sales), status=VALUES(status), deleted=0, update_time=NOW()"
+                        "(3,2,3,'有机旱黄瓜','/api/images/VCG211450687680.webp','[\"/api/images/VCG211450687680.webp\",\"/api/images/VCG211450687680.webp\"]',4.90,6.90,720,'500g/袋','通过有机种植管理，口感清脆，冷藏后风味更佳',143,1,3,0,NOW(),NOW())," +
+                        "(4,4,1,'红富士苹果礼盒','/api/images/VCG211415338609.webp','[\"/api/images/VCG211415338609.webp\",\"/api/images/VCG211415338609.webp\"]',21.80,27.80,640,'2kg/箱','精选中大果，脆甜爽口，适合家庭和送礼',238,1,4,0,NOW(),NOW())," +
+                        "(5,3,2,'奶油生菜','/api/images/VCG211375299502.webp','[\"/api/images/VCG211375299502.webp\",\"/api/images/VCG211375299502.webp\"]',4.80,6.20,580,'300g/份','叶片鲜嫩，适合轻食沙拉和火锅配菜',122,1,5,0,NOW(),NOW())," +
+                        "(6,4,1,'麒麟西瓜小果','/api/images/VCG211583441112.webp','[\"/api/images/VCG211583441112.webp\",\"/api/images/VCG211583441112.webp\"]',18.90,24.90,240,'约2.5kg/个','单果约2.5kg，皮薄瓤红，冷藏口感更佳',175,1,6,0,NOW(),NOW())," +
+                        "(7,5,3,'有机上海青','/api/images/VCG211564814308.webp','[\"/api/images/VCG211564814308.webp\",\"/api/images/VCG211564814308.webp\"]',5.80,7.80,500,'500g/袋','基地当日采收，叶梗脆嫩，适合清炒或汆烫',110,1,7,0,NOW(),NOW())," +
+                        "(8,5,3,'贝贝南瓜','/api/images/VCG211429867102.webp','[\"/api/images/VCG211429867102.webp\"]',8.90,11.90,430,'900g/个','粉糯香甜，蒸烤皆宜，家庭常备食材',98,1,8,0,NOW(),NOW()) " +
+                        "ON DUPLICATE KEY UPDATE merchant_id=VALUES(merchant_id), category_id=VALUES(category_id), name=VALUES(name), main_image=VALUES(main_image), images=VALUES(images), price=VALUES(price), original_price=VALUES(original_price), stock=VALUES(stock), unit=VALUES(unit), description=VALUES(description), sales=VALUES(sales), status=VALUES(status), deleted=0, update_time=NOW()"
         );
     }
 

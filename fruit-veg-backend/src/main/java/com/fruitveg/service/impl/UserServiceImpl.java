@@ -3,7 +3,9 @@ package com.fruitveg.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fruitveg.entity.BizUserAddress;
+import com.fruitveg.entity.BizMerchant;
 import com.fruitveg.entity.SysUser;
+import com.fruitveg.mapper.BizMerchantMapper;
 import com.fruitveg.mapper.BizUserAddressMapper;
 import com.fruitveg.mapper.SysUserMapper;
 import com.fruitveg.service.UserService;
@@ -33,6 +35,9 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private BizMerchantMapper bizMerchantMapper;
+
     @Override
     public UserInfoVO getUserInfo(Long userId) {
         SysUser sysUser = sysUserMapper.selectById(userId);
@@ -42,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
 
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtils.copyProperties(sysUser, userInfoVO);
-        userInfoVO.setRole("admin".equalsIgnoreCase(sysUser.getUsername()) ? "ADMIN" : "USER");
+        userInfoVO.setRole(resolveRole(sysUser));
         return userInfoVO;
     }
 
@@ -125,5 +130,16 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         sysUserMapper.updateById(user);
+    }
+
+    private String resolveRole(SysUser sysUser) {
+        if ("admin".equalsIgnoreCase(sysUser.getUsername())) {
+            return "ADMIN";
+        }
+        BizMerchant merchant = bizMerchantMapper.selectByUserId(sysUser.getId());
+        if (merchant != null && merchant.getStatus() != null && merchant.getStatus() == 1) {
+            return "MERCHANT";
+        }
+        return "USER";
     }
 }

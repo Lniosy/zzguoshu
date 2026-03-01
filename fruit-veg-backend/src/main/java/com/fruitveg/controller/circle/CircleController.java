@@ -24,8 +24,9 @@ public class CircleController {
     public Result<Map<String, Object>> list(@RequestParam(required = false) Integer page,
                                              @RequestParam(required = false) Integer size,
                                              @RequestParam(required = false) Boolean followedOnly,
+                                             @RequestParam(required = false) Long merchantId,
                                              HttpServletRequest request) {
-        return Result.success(mockDataService.listCirclePosts(getUserIdOrNull(request), page, size, followedOnly));
+        return Result.success(mockDataService.listCirclePosts(getUserIdOrNull(request), page, size, followedOnly, merchantId));
     }
 
     @GetMapping("/detail/{id}")

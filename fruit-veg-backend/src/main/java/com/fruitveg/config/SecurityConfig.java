@@ -93,6 +93,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/category/list", "/api/category/list", "/category/tree", "/api/category/tree").permitAll()
                 .antMatchers("/content/banners", "/api/content/banners", "/content/notices", "/api/content/notices").permitAll()
                 .antMatchers("/circle/list", "/api/circle/list", "/circle/detail/**", "/api/circle/detail/**").permitAll()
+                .antMatchers("/merchant/public/**", "/api/merchant/public/**").permitAll()
                 .antMatchers("/trace/detail/**", "/api/trace/detail/**").permitAll()
                 .antMatchers("/images/**", "/api/images/**").permitAll()
                 // 允许OPTIONS请求

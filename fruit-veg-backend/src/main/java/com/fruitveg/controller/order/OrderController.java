@@ -25,9 +25,10 @@ public class OrderController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String orderNumber
+            @RequestParam(required = false) String orderNumber,
+            HttpServletRequest request
     ) {
-        return Result.success(mockDataService.listUserOrders(page, pageSize, status, orderNumber));
+        return Result.success(mockDataService.listUserOrders(getUserId(request), page, pageSize, status, orderNumber));
     }
 
     @GetMapping("/after-sales")
@@ -40,8 +41,8 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public Result<Map<String, Object>> getOrderDetail(@PathVariable Long id) {
-        Map<String, Object> detail = mockDataService.getUserOrderDetail(id);
+    public Result<Map<String, Object>> getOrderDetail(@PathVariable Long id, HttpServletRequest request) {
+        Map<String, Object> detail = mockDataService.getUserOrderDetail(getUserId(request), id);
         if (detail == null) {
             return Result.error(404, "订单不存在");
         }
@@ -51,27 +52,31 @@ public class OrderController {
     @PostMapping("/create")
     public Result<Map<String, Object>> createOrder(@RequestBody(required = false) Map<String, Object> payload, HttpServletRequest request) {
         Long userId = getUserId(request);
-        return Result.success(mockDataService.createOrder(userId, payload));
+        try {
+            return Result.success(mockDataService.createOrder(userId, payload));
+        } catch (IllegalArgumentException e) {
+            return Result.error(400, e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancelOrder(@PathVariable Long id) {
-        return mockDataService.updateOrderStatus(id, "cancelled", 5) ? Result.success() : Result.error(404, "订单不存在");
+    public Result<Void> cancelOrder(@PathVariable Long id, HttpServletRequest request) {
+        return mockDataService.updateOrderStatus(getUserId(request), id, "cancelled", 5) ? Result.success() : Result.error(404, "订单不存在");
     }
 
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirmOrder(@PathVariable Long id) {
-        return mockDataService.updateOrderStatus(id, "completed", 4) ? Result.success() : Result.error(404, "订单不存在");
+    public Result<Void> confirmOrder(@PathVariable Long id, HttpServletRequest request) {
+        return mockDataService.updateOrderStatus(getUserId(request), id, "completed", 4) ? Result.success() : Result.error(404, "订单不存在");
     }
 
     @PutMapping("/{id}/pay")
-    public Result<Void> payOrder(@PathVariable Long id) {
-        return mockDataService.updateOrderStatus(id, "shipped", 1) ? Result.success() : Result.error(404, "订单不存在");
+    public Result<Void> payOrder(@PathVariable Long id, HttpServletRequest request) {
+        return mockDataService.updateOrderStatus(getUserId(request), id, "shipped", 1) ? Result.success() : Result.error(404, "订单不存在");
     }
 
     @PutMapping("/{id}/receive")
-    public Result<Void> receiveOrder(@PathVariable Long id) {
-        return mockDataService.updateOrderStatus(id, "completed", 4) ? Result.success() : Result.error(404, "订单不存在");
+    public Result<Void> receiveOrder(@PathVariable Long id, HttpServletRequest request) {
+        return mockDataService.updateOrderStatus(getUserId(request), id, "completed", 4) ? Result.success() : Result.error(404, "订单不存在");
     }
 
     @PostMapping("/{id}/refund")

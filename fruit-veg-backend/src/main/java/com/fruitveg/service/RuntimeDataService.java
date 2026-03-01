@@ -115,20 +115,22 @@ public class RuntimeDataService {
         products.add(product(7L, 3L, "有机上海青", "当天采收，叶梗脆嫩，适合清炒汆烫", 5.80, 7.80, "500g/袋", 500, 110, 1));
         products.add(product(8L, 3L, "贝贝南瓜", "粉糯香甜，蒸烤炖煮均可", 8.90, 11.90, "900g/个", 430, 98, 1));
 
-        Map<String, Object> defaultMerchant = new LinkedHashMap<>();
-        defaultMerchant.put("id", 1L);
-        defaultMerchant.put("name", "绿源果蔬店");
-        defaultMerchant.put("shopName", "绿源果蔬店");
-        defaultMerchant.put("businessType", "FRESH_RETAIL");
-        defaultMerchant.put("shopDescription", "专注于高品质果蔬配送");
-        defaultMerchant.put("contactName", "张三");
-        defaultMerchant.put("contactPhone", "13900139000");
-        defaultMerchant.put("address", "郑州市金水区农业路88号");
-        defaultMerchant.put("logoUrl", image("shop"));
-        defaultMerchant.put("auditStatus", 1);
-        defaultMerchant.put("createTime", now());
-        merchants.add(defaultMerchant);
-        merchantByUserId.put(1L, defaultMerchant);
+        Map<String, Object> m1 = merchant(1L, "绿源果蔬店", "专注于高品质果蔬配送", "张三", "13900139000", "郑州市金水区农业路88号", image("shop"));
+        Map<String, Object> m2 = merchant(2L, "中牟鲜采果园", "郑州周边基地直供，当日采收配送", "李四", "13900139001", "郑州市中牟县商都路168号", "/api/images/VCG211563741694.jpg");
+        Map<String, Object> m3 = merchant(3L, "惠济绿叶仓", "专注叶菜和有机蔬菜冷链配送", "王五", "13900139002", "郑州市惠济区开元路66号", "/api/images/VCG211315932533.jpg");
+        Map<String, Object> m4 = merchant(4L, "果岭优选", "精品水果礼盒与家庭常购水果", "赵六", "13900139003", "郑州市郑东新区商务外环路99号", "/api/images/VCG211327413757.jpg");
+        Map<String, Object> m5 = merchant(5L, "南郊时蔬集", "南部城区时令果蔬，2小时同城达", "钱七", "13900139004", "郑州市二七区大学南路188号", "/api/images/VCG211500639828.jpg");
+        merchants.addAll(Arrays.asList(m1, m2, m3, m4, m5));
+        merchantByUserId.put(1L, m1);
+
+        bindProductMerchant(1L, 1L);
+        bindProductMerchant(2L, 1L);
+        bindProductMerchant(3L, 2L);
+        bindProductMerchant(4L, 4L);
+        bindProductMerchant(5L, 3L);
+        bindProductMerchant(6L, 4L);
+        bindProductMerchant(7L, 5L);
+        bindProductMerchant(8L, 5L);
 
         userOrders.add(sampleOrder(1L, "pending", 0));
         userOrders.add(sampleOrder(2L, "delivered", 2));
@@ -184,8 +186,8 @@ public class RuntimeDataService {
             traceByProduct.put(productId, trace(productId, String.valueOf(product.get("name"))));
         }
 
-        circlePosts.add(circlePost(1L, "今日到货：智利车厘子", "凌晨分拣入库，上午完成冷链发车，现货充足。", Arrays.asList(image("circle-1"), image("circle-2")), Arrays.asList(1L, 4L)));
-        circlePosts.add(circlePost(2L, "有机绿叶菜采收记录", "上海青与生菜已完成农残抽检，下午批次可下单。", Collections.singletonList(image("circle-3")), Arrays.asList(7L, 5L)));
+        circlePosts.add(circlePost(1L, 1L, "今日到货：智利车厘子", "凌晨分拣入库，上午完成冷链发车，现货充足。", Arrays.asList(image("circle-1"), image("circle-2")), Arrays.asList(1L, 4L)));
+        circlePosts.add(circlePost(2L, 3L, "有机绿叶菜采收记录", "上海青与生菜已完成农残抽检，下午批次可下单。", Collections.singletonList(image("circle-3")), Arrays.asList(7L, 5L)));
         persistState();
     }
 
@@ -198,7 +200,7 @@ public class RuntimeDataService {
     }
 
     public Map<String, Object> listProducts(Integer page, Integer size, String keyword, String sortBy, Long categoryId,
-                                            Double minPrice, Double maxPrice) {
+                                            Double minPrice, Double maxPrice, Long merchantId) {
         List<Map<String, Object>> filtered = products.stream()
                 .filter(p -> keyword == null
                         || String.valueOf(p.get("name")).contains(keyword)
@@ -206,6 +208,14 @@ public class RuntimeDataService {
                 .filter(p -> categoryId == null || Objects.equals(((Number) p.get("categoryId")).longValue(), categoryId))
                 .filter(p -> minPrice == null || ((Number) p.get("price")).doubleValue() >= minPrice)
                 .filter(p -> maxPrice == null || ((Number) p.get("price")).doubleValue() <= maxPrice)
+                .filter(p -> merchantId == null || Objects.equals(((Number) p.getOrDefault("merchantId", 1L)).longValue(), merchantId))
+                .map(p -> {
+                    Map<String, Object> row = new LinkedHashMap<>(p);
+                    Long productMerchantId = ((Number) row.getOrDefault("merchantId", 1L)).longValue();
+                    row.put("merchantName", getMerchantNameById(productMerchantId));
+                    row.put("merchantAvatar", getMerchantAvatarById(productMerchantId));
+                    return row;
+                })
                 .collect(Collectors.toList());
 
         if ("price_asc".equals(sortBy)) {
@@ -372,7 +382,18 @@ public class RuntimeDataService {
                 spec(1L, "500g/盒", ((Number) p.get("price")).doubleValue()),
                 spec(2L, "1kg/盒", ((Number) p.get("price")).doubleValue() * 1.88)
         ));
-        detail.put("shop", merchants.get(0));
+        Long merchantId = ((Number) p.getOrDefault("merchantId", 1L)).longValue();
+        Map<String, Object> merchant = getMerchantById(merchantId);
+        Map<String, Object> shop = merchant == null ? new LinkedHashMap<>() : new LinkedHashMap<>(merchant);
+        shop.put("id", merchantId);
+        shop.put("shopName", shop.getOrDefault("shopName", shop.get("name")));
+        shop.put("name", shop.getOrDefault("shopName", shop.get("name")));
+        shop.put("logoUrl", shop.getOrDefault("logoUrl", image("shop")));
+        shop.put("shopLogo", shop.getOrDefault("shopLogo", shop.get("logoUrl")));
+        shop.put("shopDescription", shop.getOrDefault("shopDescription", "优质果蔬源头供应"));
+        detail.put("shop", shop);
+        detail.put("merchantName", getMerchantNameById(merchantId));
+        detail.put("merchantAvatar", getMerchantAvatarById(merchantId));
         return detail;
     }
 
@@ -508,10 +529,12 @@ public class RuntimeDataService {
         return data;
     }
 
-    public Map<String, Object> listUserOrders(Integer page, Integer pageSize, String status, String orderNumber) {
+    public Map<String, Object> listUserOrders(Long userId, Integer page, Integer pageSize, String status, String orderNumber) {
         List<Map<String, Object>> filtered = userOrders.stream()
+                .filter(o -> Objects.equals(((Number) o.getOrDefault("userId", 0L)).longValue(), userId))
                 .filter(o -> status == null || status.isEmpty() || Objects.equals(o.get("status"), status))
                 .filter(o -> orderNumber == null || orderNumber.isEmpty() || String.valueOf(o.get("orderNumber")).contains(orderNumber))
+                .map(LinkedHashMap::new)
                 .collect(Collectors.toList());
 
         int p = page == null || page < 1 ? 1 : page;
@@ -527,13 +550,16 @@ public class RuntimeDataService {
         return result;
     }
 
-    public Map<String, Object> getUserOrderDetail(Long id) {
+    public Map<String, Object> getUserOrderDetail(Long userId, Long id) {
         return userOrders.stream()
+                .filter(o -> Objects.equals(((Number) o.getOrDefault("userId", 0L)).longValue(), userId))
                 .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), id))
                 .findFirst().map(LinkedHashMap::new).orElse(null);
     }
 
     public Map<String, Object> createOrder(Long userId, Map<String, Object> payload) {
+        Long userMerchantId = getMerchantIdByUserIdOrNull(userId);
+        Long resolvedMerchantId = null;
         long id = orderIdSeq.incrementAndGet();
         Map<String, Object> order = sampleOrder(id, "pending", 0);
         order.put("id", id);
@@ -554,6 +580,13 @@ public class RuntimeDataService {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
             if (!items.isEmpty()) {
+                resolvedMerchantId = resolveMerchantIdFromItems(items);
+                if (resolvedMerchantId == null) {
+                    throw new IllegalArgumentException("订单商品缺少商家信息，请刷新后重试");
+                }
+                if (userMerchantId != null && Objects.equals(userMerchantId, resolvedMerchantId)) {
+                    throw new IllegalArgumentException("卖家不能购买自己店铺的商品");
+                }
                 order.put("products", items);
             }
         }
@@ -561,7 +594,7 @@ public class RuntimeDataService {
             order.put("totalAmount", ((Number) payload.get("totalAmount")).doubleValue());
         }
         order.put("userId", userId);
-        order.put("merchantId", 1L);
+        order.put("merchantId", resolvedMerchantId == null ? 1L : resolvedMerchantId);
         order.put("logisticsCompany", "待分配");
         order.put("logisticsNo", "-");
         order.put("logisticsTracks", new ArrayList<>(Collections.singletonList(logisticsTrack("订单创建", "用户已提交订单，等待支付"))));
@@ -570,8 +603,9 @@ public class RuntimeDataService {
         return new LinkedHashMap<>(order);
     }
 
-    public boolean updateOrderStatus(Long id, String status, Integer adminStatus) {
+    public boolean updateOrderStatus(Long userId, Long id, String status, Integer adminStatus) {
         Map<String, Object> found = userOrders.stream()
+                .filter(o -> Objects.equals(((Number) o.getOrDefault("userId", 0L)).longValue(), userId))
                 .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), id))
                 .findFirst().orElse(null);
         if (found == null) {
@@ -663,7 +697,17 @@ public class RuntimeDataService {
     }
 
     public boolean shipOrder(Long id) {
-        return updateOrderStatus(id, "delivered", 2);
+        Map<String, Object> found = userOrders.stream()
+                .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), id))
+                .findFirst().orElse(null);
+        if (found == null) {
+            return false;
+        }
+        found.put("status", "delivered");
+        found.put("adminStatus", 2);
+        found.put("deliveryTime", now());
+        appendLogisticsTrack(found, "已发货", "平台已安排发货");
+        return true;
     }
 
     public boolean shipOrder(Long id, String logisticsCompany, String logisticsNo) {
@@ -683,6 +727,15 @@ public class RuntimeDataService {
         return true;
     }
 
+    public Map<String, Object> getMerchantOrderDetail(Long userId, Long orderId) {
+        Long merchantId = getMerchantIdByUserId(userId);
+        Map<String, Object> order = userOrders.stream()
+                .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), orderId))
+                .filter(o -> Objects.equals(((Number) o.getOrDefault("merchantId", 1L)).longValue(), merchantId))
+                .findFirst().orElse(null);
+        return order == null ? null : new LinkedHashMap<>(order);
+    }
+
     public Map<String, Object> listMerchantOrders(Long userId, Integer page, Integer pageSize, String status, String orderNo) {
         Long merchantId = getMerchantIdByUserId(userId);
         List<Map<String, Object>> rows = userOrders.stream()
@@ -697,6 +750,7 @@ public class RuntimeDataService {
     public Map<String, Object> applyRefund(Long orderId, Long userId, Map<String, Object> payload) {
         Map<String, Object> order = userOrders.stream()
                 .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), orderId))
+                .filter(o -> Objects.equals(((Number) o.getOrDefault("userId", 0L)).longValue(), userId))
                 .findFirst().orElse(null);
         if (order == null) {
             return null;
@@ -1018,18 +1072,20 @@ public class RuntimeDataService {
         return trace == null ? null : new LinkedHashMap<>(trace);
     }
 
-    public Map<String, Object> listCirclePosts(Long userId, Integer page, Integer size, Boolean followedOnly) {
+    public Map<String, Object> listCirclePosts(Long userId, Integer page, Integer size, Boolean followedOnly, Long merchantId) {
         Set<Long> followed = userId == null
                 ? Collections.emptySet()
                 : followMerchantIdsByUser.getOrDefault(userId, Collections.emptySet());
         boolean onlyFollowed = Boolean.TRUE.equals(followedOnly);
         List<Map<String, Object>> rows = circlePosts.stream()
+                .filter(post -> merchantId == null || Objects.equals(((Number) post.getOrDefault("merchantId", 1L)).longValue(), merchantId))
                 .filter(post -> !onlyFollowed || followed.contains(((Number) post.get("merchantId")).longValue()))
                 .sorted((a, b) -> Long.compare(((Number) b.get("id")).longValue(), ((Number) a.get("id")).longValue()))
                 .map(post -> {
                     Map<String, Object> row = new LinkedHashMap<>(post);
-                    Long merchantId = ((Number) post.get("merchantId")).longValue();
-                    row.put("isFollowed", followed.contains(merchantId));
+                    Long postMerchantId = ((Number) post.get("merchantId")).longValue();
+                    row.put("merchantAvatar", getMerchantAvatarById(postMerchantId));
+                    row.put("isFollowed", followed.contains(postMerchantId));
                     return row;
                 })
                 .collect(Collectors.toList());
@@ -1115,6 +1171,7 @@ public class RuntimeDataService {
         post.put("id", id);
         post.put("merchantId", merchantId);
         post.put("merchantName", merchantName);
+        post.put("merchantAvatar", getMerchantAvatarById(merchantId));
         post.put("title", String.valueOf(payload.getOrDefault("title", "商家动态")));
         post.put("content", String.valueOf(payload.getOrDefault("content", "")));
         post.put("images", castListString(payload.get("images")).isEmpty()
@@ -1494,11 +1551,12 @@ public class RuntimeDataService {
         return trace;
     }
 
-    private Map<String, Object> circlePost(Long id, String title, String content, List<String> images, List<Long> productIds) {
+    private Map<String, Object> circlePost(Long id, Long merchantId, String title, String content, List<String> images, List<Long> productIds) {
         Map<String, Object> post = new LinkedHashMap<>();
         post.put("id", id);
-        post.put("merchantId", 1L);
-        post.put("merchantName", "绿源果蔬店");
+        post.put("merchantId", merchantId);
+        post.put("merchantName", getMerchantNameById(merchantId));
+        post.put("merchantAvatar", getMerchantAvatarById(merchantId));
         post.put("title", title);
         post.put("content", content);
         post.put("images", images);
@@ -1509,6 +1567,29 @@ public class RuntimeDataService {
         post.put("createTime", now());
         post.put("comments", new ArrayList<>(Collections.singletonList(comment(1L, "小李", "看起来很新鲜，已下单！"))));
         return post;
+    }
+
+    private Map<String, Object> merchant(Long id, String shopName, String description, String contactName, String contactPhone, String address, String logoUrl) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("id", id);
+        item.put("name", shopName);
+        item.put("shopName", shopName);
+        item.put("businessType", "FRESH_RETAIL");
+        item.put("shopDescription", description);
+        item.put("contactName", contactName);
+        item.put("contactPhone", contactPhone);
+        item.put("address", address);
+        item.put("logoUrl", logoUrl);
+        item.put("auditStatus", 1);
+        item.put("createTime", now());
+        return item;
+    }
+
+    private void bindProductMerchant(Long productId, Long merchantId) {
+        products.stream()
+                .filter(p -> Objects.equals(((Number) p.get("id")).longValue(), productId))
+                .findFirst()
+                .ifPresent(p -> p.put("merchantId", merchantId));
     }
 
     private Map<String, Object> comment(Long id, String nickname, String content) {
@@ -1530,6 +1611,21 @@ public class RuntimeDataService {
                 "harvestTime", "storageCondition", "shelfLife", "testReport"
         ));
         row.put("updateTime", now());
+        return row;
+    }
+
+    public Map<String, Object> getPublicMerchantInfo(Long merchantId) {
+        Map<String, Object> merchant = getMerchantById(merchantId);
+        if (merchant == null) {
+            return null;
+        }
+        Map<String, Object> row = new LinkedHashMap<>(merchant);
+        row.put("id", merchantId);
+        row.put("name", row.getOrDefault("shopName", row.get("name")));
+        row.put("shopName", row.getOrDefault("shopName", row.get("name")));
+        row.put("logoUrl", row.getOrDefault("logoUrl", image("shop")));
+        row.put("shopLogo", row.getOrDefault("shopLogo", row.get("logoUrl")));
+        row.put("shopDescription", row.getOrDefault("shopDescription", ""));
         return row;
     }
 
@@ -1636,6 +1732,55 @@ public class RuntimeDataService {
                 .map(m -> String.valueOf(m.getOrDefault("shopName", m.get("name"))))
                 .findFirst()
                 .orElse("未知商家");
+    }
+
+    private String getMerchantAvatarById(Long merchantId) {
+        return merchants.stream()
+                .filter(m -> Objects.equals(((Number) m.get("id")).longValue(), merchantId))
+                .map(m -> String.valueOf(m.getOrDefault("logoUrl", m.getOrDefault("shopLogo", image("shop")))))
+                .findFirst()
+                .orElse(image("shop"));
+    }
+
+    private Map<String, Object> getMerchantById(Long merchantId) {
+        return merchants.stream()
+                .filter(m -> Objects.equals(((Number) m.get("id")).longValue(), merchantId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Long getMerchantIdByUserIdOrNull(Long userId) {
+        Map<String, Object> merchant = merchantByUserId.get(userId);
+        if (merchant != null) {
+            return ((Number) merchant.get("id")).longValue();
+        }
+        return null;
+    }
+
+    private Long resolveMerchantIdFromItems(List<Map<String, Object>> items) {
+        Set<Long> merchantIds = new LinkedHashSet<>();
+        for (Map<String, Object> item : items) {
+            Long merchantId = toLong(item.get("merchantId"));
+            if (merchantId == null || merchantId <= 0) {
+                Long productId = toLong(item.get("id"));
+                if (productId != null) {
+                    Map<String, Object> product = products.stream()
+                            .filter(p -> Objects.equals(((Number) p.get("id")).longValue(), productId))
+                            .findFirst().orElse(null);
+                    if (product != null) {
+                        merchantId = ((Number) product.getOrDefault("merchantId", 1L)).longValue();
+                    }
+                }
+            }
+            if (merchantId == null || merchantId <= 0) {
+                return null;
+            }
+            merchantIds.add(merchantId);
+        }
+        if (merchantIds.size() != 1) {
+            throw new IllegalArgumentException("一次下单仅支持同一商家商品，请分开下单");
+        }
+        return merchantIds.iterator().next();
     }
 
     public void persistStateSilently() {

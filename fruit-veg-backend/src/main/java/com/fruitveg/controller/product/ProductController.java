@@ -33,10 +33,11 @@ public class ProductController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) Long category,
+            @RequestParam(required = false) Long merchantId,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice
     ) {
-        return Result.success(catalogDbService.listProducts(page, size, keyword, sortBy, category, minPrice, maxPrice));
+        return Result.success(catalogDbService.listProducts(page, size, keyword, sortBy, category, minPrice, maxPrice, merchantId));
     }
 
     @GetMapping("/product/recommend")
@@ -55,6 +56,6 @@ public class ProductController {
 
     @GetMapping("/product/search")
     public Result<Map<String, Object>> searchProduct(@RequestParam String keyword) {
-        return Result.success(catalogDbService.listProducts(1, 12, keyword, null, null, null, null));
+        return Result.success(catalogDbService.listProducts(1, 12, keyword, null, null, null, null, null));
     }
 }

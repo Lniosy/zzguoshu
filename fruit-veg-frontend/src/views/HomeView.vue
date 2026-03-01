@@ -79,6 +79,11 @@
               <img :src="product.image" :alt="product.name" class="product-image" @click="navigate(`/products/${product.id}`)" />
               <div class="product-content">
                 <h3>{{ product.name }}</h3>
+                <div class="merchant-row" @click="navigate(`/store/${product.merchantId}`)">
+                  <el-avatar :size="24" :src="product.merchantAvatar">{{ product.merchantName?.[0] || '店' }}</el-avatar>
+                  <span>{{ product.merchantName }}</span>
+                  <small>{{ product.merchantAddress || '郑州市' }}</small>
+                </div>
                 <p>{{ product.description }}</p>
                 <div class="price-line">
                   <span class="price">¥{{ Number(product.price).toFixed(2) }}</span>
@@ -264,6 +269,8 @@ onMounted(fetchHomeData)
   cursor: pointer;
 }
 .product-content h3 { margin: 10px 0 6px; font-size: 18px; }
+.merchant-row { display: flex; align-items: center; gap: 6px; color: #4f695d; font-size: 12px; cursor: pointer; margin-bottom: 6px; }
+.merchant-row small { margin-left: auto; color: #85a094; }
 .product-content p { margin: 0; color: #5a6f64; min-height: 42px; }
 .price-line { margin: 10px 0; display: flex; gap: 8px; align-items: baseline; }
 .price { color: #11845a; font-size: 24px; font-weight: 700; }
