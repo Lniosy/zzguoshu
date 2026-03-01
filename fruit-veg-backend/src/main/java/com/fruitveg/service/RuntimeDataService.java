@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class RuntimeDataService {
 
     private static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String STATE_KEY = "mock-data-service";
+    private static final String STATE_KEY = "runtime-data-service-v2";
     private static final Map<String, String> IMAGE_URLS = new HashMap<>();
 
     static {
@@ -32,25 +32,25 @@ public class RuntimeDataService {
         IMAGE_URLS.put("circle-2", "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80");
         IMAGE_URLS.put("circle-3", "https://images.unsplash.com/photo-1568584711271-096ca3376931?auto=format&fit=crop&w=1200&q=80");
 
-        IMAGE_URLS.put("tomato", "https://images.unsplash.com/photo-1755321096149-v2b9Zh1ORm8?auto=format&fit=crop&w=1000&q=80");
-        IMAGE_URLS.put("apple", "https://images.unsplash.com/photo-1652299035422-7waRESfE464?auto=format&fit=crop&w=1000&q=80");
+        IMAGE_URLS.put("tomato", "https://source.unsplash.com/8FOwI8PMZME/1000x750");
+        IMAGE_URLS.put("apple", "https://source.unsplash.com/vAFQ-JHpa_E/1000x750");
 
-        IMAGE_URLS.put("product1", "https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail1", "https://images.unsplash.com/photo-1642752602324-jBZSdHbS4Rg?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product2", "https://images.unsplash.com/photo-1765653379054-88OzijJfpv8?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail2", "https://images.unsplash.com/photo-1742124768458-agXVu0ILIOU?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product3", "https://images.unsplash.com/photo-1568584711271-096ca3376931?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail3", "https://images.unsplash.com/photo-1737558596633-VqMW9OwAwig?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product4", "https://images.unsplash.com/photo-1652299035422-7waRESfE464?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail4", "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product5", "https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail5", "https://images.unsplash.com/photo-1659466100158-PchPR1WcE1Q?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product6", "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail6", "https://images.unsplash.com/photo-1615485925879-9729b59f5d62?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product7", "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail7", "https://images.unsplash.com/photo-1709402812245-wguVC8oG3qw?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product8", "https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=1200&q=80");
-        IMAGE_URLS.put("product-detail8", "https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=1200&q=80");
+        IMAGE_URLS.put("product1", "https://source.unsplash.com/aVBpfmR3YBc/1200x900");
+        IMAGE_URLS.put("product-detail1", "https://source.unsplash.com/aVBpfmR3YBc/1200x901");
+        IMAGE_URLS.put("product2", "https://source.unsplash.com/8FOwI8PMZME/1200x900");
+        IMAGE_URLS.put("product-detail2", "https://source.unsplash.com/8FOwI8PMZME/1200x901");
+        IMAGE_URLS.put("product3", "https://source.unsplash.com/fPLSD4mz7II/1200x900");
+        IMAGE_URLS.put("product-detail3", "https://source.unsplash.com/fPLSD4mz7II/1200x901");
+        IMAGE_URLS.put("product4", "https://source.unsplash.com/vAFQ-JHpa_E/1200x900");
+        IMAGE_URLS.put("product-detail4", "https://source.unsplash.com/vAFQ-JHpa_E/1200x901");
+        IMAGE_URLS.put("product5", "https://source.unsplash.com/sdDA-pMzW10/1200x900");
+        IMAGE_URLS.put("product-detail5", "https://source.unsplash.com/sdDA-pMzW10/1200x901");
+        IMAGE_URLS.put("product6", "https://source.unsplash.com/ckbTdSZh5Zo/1200x900");
+        IMAGE_URLS.put("product-detail6", "https://source.unsplash.com/ckbTdSZh5Zo/1200x901");
+        IMAGE_URLS.put("product7", "https://source.unsplash.com/5cqDgYwlcCM/1200x900");
+        IMAGE_URLS.put("product-detail7", "https://source.unsplash.com/5cqDgYwlcCM/1200x901");
+        IMAGE_URLS.put("product8", "https://source.unsplash.com/wvtorL2ww1A/1200x900");
+        IMAGE_URLS.put("product-detail8", "https://source.unsplash.com/wvtorL2ww1A/1200x901");
     }
 
     private final List<Map<String, Object>> categories = new ArrayList<>();
@@ -102,14 +102,14 @@ public class RuntimeDataService {
         categories.add(category(2L, 0L, "新鲜蔬菜"));
         categories.add(category(3L, 0L, "有机食品"));
 
-        products.add(product(1L, 1L, "智利车厘子2J", "当季海运到港，果径均匀，甜脆多汁，适合家庭尝鲜", 39.90, 49.90, "500g/盒", 360, 268, 1));
-        products.add(product(2L, 2L, "精品圣女果", "本地温室直采，果皮薄、酸甜平衡，适合沙拉与即食", 8.80, 12.80, "500g/盒", 780, 196, 1));
-        products.add(product(3L, 3L, "有机旱黄瓜", "通过有机种植管理，口感清脆，冷藏后风味更佳", 6.90, 8.90, "500g/袋", 720, 143, 1));
-        products.add(product(4L, 1L, "红富士苹果礼盒", "精选中大果，脆甜爽口，适合家庭和送礼", 19.80, 25.80, "2kg/箱", 640, 238, 1));
-        products.add(product(5L, 2L, "奶油生菜", "叶片鲜嫩，适合轻食沙拉和火锅配菜", 5.60, 7.20, "300g/份", 580, 122, 0));
-        products.add(product(6L, 1L, "麒麟西瓜小果", "单果约2.5kg，皮薄瓤红，冷藏口感更佳", 29.90, 36.00, "约2.5kg/个", 240, 175, 1));
-        products.add(product(7L, 3L, "有机上海青", "基地当日采收，叶梗脆嫩，适合清炒或汆烫", 7.50, 9.80, "500g/袋", 500, 110, 1));
-        products.add(product(8L, 3L, "贝贝南瓜", "粉糯香甜，蒸烤皆宜，家庭常备食材", 12.90, 16.90, "900g/个", 430, 98, 1));
+        products.add(product(1L, 1L, "智利车厘子2J", "应季进口，果径均匀，甜脆多汁，适合家庭鲜食", 32.80, 39.80, "500g/盒", 360, 268, 1));
+        products.add(product(2L, 2L, "精品圣女果", "本地温室采收，酸甜平衡，适合沙拉与即食", 6.90, 8.90, "500g/盒", 780, 196, 1));
+        products.add(product(3L, 3L, "有机旱黄瓜", "脆嫩清爽，凉拌和热炒都适合", 4.90, 6.90, "500g/袋", 720, 143, 1));
+        products.add(product(4L, 1L, "红富士苹果礼盒", "中大果混装，脆甜多汁，家用与送礼皆可", 21.80, 27.80, "2kg/箱", 640, 238, 1));
+        products.add(product(5L, 2L, "奶油生菜", "叶片鲜嫩，轻食沙拉和火锅都适配", 4.80, 6.20, "300g/份", 580, 122, 1));
+        products.add(product(6L, 1L, "麒麟西瓜小果", "单果约2.5kg，皮薄瓤红，口感清甜", 18.90, 24.90, "约2.5kg/个", 240, 175, 1));
+        products.add(product(7L, 3L, "有机上海青", "当天采收，叶梗脆嫩，适合清炒汆烫", 5.80, 7.80, "500g/袋", 500, 110, 1));
+        products.add(product(8L, 3L, "贝贝南瓜", "粉糯香甜，蒸烤炖煮均可", 8.90, 11.90, "900g/个", 430, 98, 1));
 
         Map<String, Object> defaultMerchant = new LinkedHashMap<>();
         defaultMerchant.put("id", 1L);
@@ -1419,7 +1419,7 @@ public class RuntimeDataService {
         p1.put("name", "精品圣女果");
         p1.put("images", Collections.singletonList(image("tomato")));
         p1.put("spec", "500g/盒");
-        p1.put("price", 8.8);
+        p1.put("price", 6.9);
         p1.put("quantity", 2);
 
         Map<String, Object> p2 = new LinkedHashMap<>();
@@ -1427,7 +1427,7 @@ public class RuntimeDataService {
         p2.put("name", "红富士苹果礼盒");
         p2.put("images", Collections.singletonList(image("apple")));
         p2.put("spec", "2kg/箱");
-        p2.put("price", 19.8);
+        p2.put("price", 21.8);
         p2.put("quantity", 1);
 
         Map<String, Object> order = new LinkedHashMap<>();
@@ -1435,7 +1435,7 @@ public class RuntimeDataService {
         order.put("userId", 1L);
         order.put("merchantId", 1L);
         order.put("orderNumber", "FV202602" + (1000 + id));
-        order.put("totalAmount", 37.4);
+        order.put("totalAmount", 35.6);
         order.put("status", status);
         order.put("adminStatus", adminStatus);
         order.put("paymentMethod", "微信支付");
