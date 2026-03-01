@@ -1,0 +1,11 @@
+# AI智能问答配置
+# 灵基流动API配置
+API_KEY: sk-rozxhvnwhwxlkgavsvljwftpkqzahuhtutwycgdvspitxazs
+API_BASE_URL: https://api.siliconflow.cn/v1/chat/completions
+API_MODEL: deepseek-ai/DeepSeek-V3
+
+# AI问答功能范围
+# - 果蔬知识科普（营养价值、功效作用）
+# - 存储建议（保鲜方法、储存温度）
+# - 食用方法（烹饪建议、搭配禁忌）
+# - 选购技巧（挑选方法、成熟度判断）

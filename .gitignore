@@ -1,0 +1,37 @@
+# macOS / editor
+.DS_Store
+.idea/
+.vscode/
+.git_backup_*/
+
+# Backend build/runtime
+fruit-veg-backend/target/
+fruit-veg-backend/logs/
+fruit-veg-backend/.mvn/
+
+# Frontend dependencies/build
+fruit-veg-frontend/node_modules/
+fruit-veg-frontend/dist/
+fruit-veg-frontend/.vite/
+
+# Playwright / test artifacts
+.playwright-cli/
+output/playwright/screenshots/
+output/playwright/*.log
+output/playwright/test-*.env
+output/playwright/*.pdf
+
+# Common logs/temp
+*.log
+*.tmp
+*.swp
+
+# Local archives
+fruit-veg-backend/spring-project.zip
+
+# Optional local uploads
+upload/
+
+# Proposal documents (keep local only)
+开题报告*.doc
+开题报告*.docx

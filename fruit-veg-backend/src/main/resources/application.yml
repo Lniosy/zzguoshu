@@ -1,0 +1,78 @@
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Spring配置
+spring:
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/fruit_veg_sales?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  # 文件上传限制
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  # 允许循环依赖
+  main:
+    allow-circular-references: true
+
+# MyBatis Plus配置
+mybatis-plus:
+  # mapper映射文件位置
+  mapper-locations: classpath*:/mapper/**/*.xml
+  # 实体扫描包
+  type-aliases-package: com.fruitveg.entity
+  # 全局配置
+  global-config:
+    db-config:
+      # 主键类型：自增
+      id-type: auto
+      # 逻辑删除字段名
+      logic-delete-field: deleted
+      # 逻辑删除值
+      logic-delete-value: 1
+      # 逻辑未删除值
+      logic-not-delete-value: 0
+  # 配置日志输出
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+
+# Knife4j接口文档配置
+knife4j:
+  enable: false
+
+# JWT配置
+jwt:
+  # 密钥（长度至少512位，使用openssl rand -hex 64生成）
+  secret: 5e0c72595254cdb5dfc1593dcfb1f6b9ec1258251b930a6a15377d4522daa2d60451ad810e0a20910962e46178868cae31470defba345c5b4a21fd0e5dffb6f6
+  # 有效期（小时）
+  expire: 2
+  # 刷新令牌有效期（天）
+  refresh-expire: 7
+
+# 文件上传配置
+upload:
+  # 本地存储路径
+  local-path: /Users/lniosy/Documents/果蔬销售系统/upload/
+  # 访问路径前缀
+  access-path: /upload/
+
+# 日志配置
+logging:
+  level:
+    com.fruitveg: DEBUG
+    org.springframework: INFO
+    org.apache.ibatis: DEBUG
+  file:
+    name: logs/fruit-veg-backend.log
