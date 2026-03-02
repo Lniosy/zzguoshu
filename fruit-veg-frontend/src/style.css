@@ -49,6 +49,23 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 统一滚动条与隐藏相关类 */
+.hidden-xs-only {
+  display: block;
+}
+.hidden-sm-and-up {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hidden-xs-only {
+    display: none !important;
+  }
+  .hidden-sm-and-up {
+    display: block !important;
+  }
+}
+
 h1,
 h2,
 h3,

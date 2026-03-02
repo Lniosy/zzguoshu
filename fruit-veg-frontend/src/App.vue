@@ -25,11 +25,13 @@ const showCartFloat = computed(() => showAppNav.value && !route.path.startsWith(
         </transition>
       </router-view>
     </div>
-    <el-badge v-if="showCartFloat" :value="cartStore.getCartCount" class="cart-float-badge">
-      <button class="cart-float" @click="navigate('/cart')">
-        <el-icon><ShoppingCart /></el-icon>
-      </button>
-    </el-badge>
+    <transition name="fade">
+      <el-badge v-if="showCartFloat" :value="cartStore.getCartCount" class="cart-float-badge">
+        <button class="cart-float" @click="navigate('/cart')">
+          <el-icon><ShoppingCart /></el-icon>
+        </button>
+      </el-badge>
+    </transition>
   </div>
 </template>
 
@@ -54,13 +56,34 @@ const showCartFloat = computed(() => showAppNav.value && !route.path.startsWith(
   height: 52px;
   border: none;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff5c3f, #f83f3f);
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  box-shadow: 0 10px 20px rgba(248, 63, 63, 0.35);
+  box-shadow: 0 10px 20px rgba(32, 127, 95, 0.35);
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-float:hover {
+  transform: scale(1.05);
+  box-shadow: 0 14px 24px rgba(32, 127, 95, 0.45);
+}
+
+.cart-float:active {
+  transform: scale(0.95);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>

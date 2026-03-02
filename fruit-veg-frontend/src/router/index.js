@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { useUserStore } from '../stores/user'
+import HomeView from '../views/public/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,24 +13,24 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue')
+      component: () => import('../views/public/AboutView.vue')
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/LoginView.vue'),
+      component: () => import('../views/public/LoginView.vue'),
       meta: { hideGlobalNav: true }
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('../views/RegisterView.vue'),
+      component: () => import('../views/public/RegisterView.vue'),
       meta: { hideGlobalNav: true }
     },
     {
       path: '/user',
       name: 'user',
-      component: () => import('../views/UserCenter.vue'),
+      component: () => import('../views/user/UserCenter.vue'),
       meta: { requireAuth: true }
     },
     {
@@ -47,13 +48,13 @@ const router = createRouter({
     {
       path: '/user/address/edit',
       name: 'user-address-add',
-      component: () => import('../views/AddressEdit.vue'),
+      component: () => import('../views/user/AddressEdit.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/user/address/edit/:id',
       name: 'user-address-edit',
-      component: () => import('../views/AddressEdit.vue'),
+      component: () => import('../views/user/AddressEdit.vue'),
       meta: { requireAuth: true }
     },
     {
@@ -77,63 +78,63 @@ const router = createRouter({
     {
       path: '/merchant/apply',
       name: 'merchant-apply',
-      component: () => import('../views/MerchantApply.vue'),
+      component: () => import('../views/merchant/MerchantApply.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/merchant/shop',
       name: 'merchant-shop',
-      component: () => import('../views/ShopManage.vue'),
+      component: () => import('../views/merchant/ShopManage.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/merchant/shop/edit',
       name: 'merchant-shop-edit',
-      component: () => import('../views/ShopEdit.vue'),
+      component: () => import('../views/merchant/ShopEdit.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/products',
       name: 'products',
-      component: () => import('../views/ProductList.vue')
+      component: () => import('../views/public/ProductList.vue')
     },
     {
       path: '/products/:id',
       name: 'product-detail',
-      component: () => import('../views/ProductDetail.vue')
+      component: () => import('../views/public/ProductDetail.vue')
     },
     {
       path: '/products/:id/trace',
       name: 'product-trace',
-      component: () => import('../views/TraceView.vue'),
+      component: () => import('../views/public/TraceView.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/store/:id',
       name: 'merchant-store',
-      component: () => import('../views/MerchantStoreView.vue')
+      component: () => import('../views/merchant/MerchantStoreView.vue')
     },
     {
       path: '/trace/detail/:id',
       name: 'trace-detail',
-      component: () => import('../views/TraceView.vue')
+      component: () => import('../views/public/TraceView.vue')
     },
     {
       path: '/cart',
       name: 'cart',
-      component: () => import('../views/CartView.vue'),
+      component: () => import('../views/public/CartView.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/orders',
       name: 'orders',
-      component: () => import('../views/OrderList.vue'),
+      component: () => import('../views/user/OrderList.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/orders/:id',
       name: 'order-detail',
-      component: () => import('../views/OrderDetail.vue'),
+      component: () => import('../views/user/OrderDetail.vue'),
       meta: { requireAuth: true }
     },
     {
@@ -145,24 +146,24 @@ const router = createRouter({
     {
       path: '/checkout',
       name: 'checkout',
-      component: () => import('../views/CheckoutView.vue'),
+      component: () => import('../views/public/CheckoutView.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/circle',
       name: 'circle',
-      component: () => import('../views/CircleView.vue')
+      component: () => import('../views/public/CircleView.vue')
     },
     {
       path: '/ai-expert',
       name: 'ai-expert',
-      component: () => import('../views/AIExpertView.vue'),
+      component: () => import('../views/public/AIExpertView.vue'),
       meta: { requireAuth: true }
     },
     {
       path: '/admin',
       name: 'admin',
-      component: () => import('../views/AdminDashboard.vue'),
+      component: () => import('../layouts/AdminLayout.vue'),
       meta: {
         requireAuth: true,
         requireAdmin: true
@@ -171,62 +172,62 @@ const router = createRouter({
         {
           path: '',
           name: 'admin-dashboard',
-          component: () => import('../views/AdminStats.vue')
+          component: () => import('../views/admin/AdminStats.vue')
         },
         {
           path: 'users',
           name: 'admin-users',
-          component: () => import('../views/AdminUserList.vue')
+          component: () => import('../views/admin/AdminUserList.vue')
         },
         {
           path: 'roles',
           name: 'admin-roles',
-          component: () => import('../views/AdminRolePermission.vue')
+          component: () => import('../views/admin/AdminRolePermission.vue')
         },
         {
           path: 'traces',
           name: 'admin-traces',
-          component: () => import('../views/AdminTraceManage.vue')
+          component: () => import('../views/admin/AdminTraceManage.vue')
         },
         {
           path: 'products',
           name: 'admin-products',
-          component: () => import('../views/AdminProductList.vue')
+          component: () => import('../views/admin/AdminProductList.vue')
         },
         {
           path: 'orders',
           name: 'admin-orders',
-          component: () => import('../views/AdminOrderList.vue')
+          component: () => import('../views/admin/AdminOrderList.vue')
         },
         {
           path: 'merchants',
           name: 'admin-merchants',
-          component: () => import('../views/AdminMerchantList.vue')
+          component: () => import('../views/admin/AdminMerchantList.vue')
         },
         {
           path: 'merchant-applications',
           name: 'admin-merchant-applications',
-          component: () => import('../views/AdminMerchantList.vue')
+          component: () => import('../views/admin/AdminMerchantList.vue')
         },
         {
           path: 'stats',
           name: 'admin-stats',
-          component: () => import('../views/AdminStats.vue')
+          component: () => import('../views/admin/AdminStats.vue')
         },
         {
           path: 'complaints',
           name: 'admin-complaints',
-          component: () => import('../views/AdminComplaintList.vue')
+          component: () => import('../views/admin/AdminComplaintList.vue')
         },
         {
           path: 'content',
           name: 'admin-content',
-          component: () => import('../views/AdminContentManage.vue')
+          component: () => import('../views/admin/AdminContentManage.vue')
         },
         {
           path: 'settings',
           name: 'admin-settings',
-          component: () => import('../views/AdminSystemSettings.vue')
+          component: () => import('../views/admin/AdminSystemSettings.vue')
         }
       ]
     }
@@ -235,14 +236,14 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
+  const userStore = useUserStore()
+  
   // 检查是否需要登录
   if (to.meta.requireAuth) {
-    const token = localStorage.getItem('token')
-    if (token) {
+    if (userStore.getIsLoggedIn && userStore.getToken) {
       // 检查是否需要管理员权限
       if (to.meta.requireAdmin) {
-        const role = localStorage.getItem('role') || 'USER'
-        if (role === 'ADMIN') {
+        if (userStore.isAdmin) {
           next()
         } else {
           next('/') // 无权限跳转到首页

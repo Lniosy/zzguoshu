@@ -12,8 +12,8 @@
       </el-header>
       <el-main class="product-main">
         <el-row :gutter="20">
-          <!-- 左侧分类导航 -->
-          <el-col :span="6">
+          <!-- 左侧分类导航 (仅大屏显示) -->
+          <el-col :xs="0" :sm="6" class="hidden-xs-only">
             <el-card class="category-card">
               <template #header>
                 <h3>商品分类</h3>
@@ -28,15 +28,30 @@
               />
             </el-card>
           </el-col>
+          
           <!-- 右侧商品列表 -->
-          <el-col :span="18">
-            <!-- 搜索栏 -->
-            <el-card class="search-card">
+          <el-col :xs="24" :sm="18">
+            <!-- 移动端简易分类选单 -->
+            <div class="mobile-category hidden-sm-and-up" style="margin-bottom: 12px">
+               <el-cascader
+                 v-model="filterParams.categoryId"
+                 :options="categoryTree"
+                 :props="{ value: 'cateId', label: 'cateName', children: 'children', checkStrictly: true }"
+                 placeholder="全部分类"
+                 style="width: 100%"
+                 @change="handleFilter"
+                 clearable>
+               </el-cascader>
+            </div>
+
+            <!-- 工具栏：合并搜索与高级筛选项，样式紧凑化 -->
+            <div class="toolbar-wrapper surface-muted" style="padding: 12px 16px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
               <el-input
                 v-model="searchKeyword"
-                placeholder="请输入商品名称或关键词"
-                style="width: 300px"
+                placeholder="搜索商品名称/关键词"
+                style="flex: 1; min-width: 240px; max-width: 320px;"
                 @keyup.enter="handleSearch"
+                clearable
               >
                 <template #append>
                   <el-button @click="handleSearch">
@@ -44,52 +59,36 @@
                   </el-button>
                 </template>
               </el-input>
-            </el-card>
-            <!-- 筛选排序 -->
-            <el-card class="filter-card">
-              <el-row :gutter="10">
-                <el-col :span="6">
-                  <el-select v-model="filterParams.sortBy" placeholder="排序方式" @change="handleFilter">
-                    <el-option label="默认排序" value="" />
-                    <el-option label="价格从低到高" value="price_asc" />
-                    <el-option label="价格从高到低" value="price_desc" />
-                    <el-option label="销量从高到低" value="sales_desc" />
-                    <el-option label="上架时间从新到旧" value="create_time_desc" />
-                  </el-select>
-                </el-col>
-                <el-col :span="6">
-                  <el-input-number
-                    v-model="filterParams.minPrice"
-                    :min="0"
-                    :max="10000"
-                    placeholder="最低价格"
-                    @change="handleFilter"
-                  />
-                </el-col>
-                <el-col :span="6">
-                  <el-input-number
-                    v-model="filterParams.maxPrice"
-                    :min="0"
-                    :max="10000"
-                    placeholder="最高价格"
-                    @change="handleFilter"
-                  />
-                </el-col>
-                <el-col :span="6">
-                  <el-button type="primary" @click="handleReset">
-                    <el-icon><Refresh /></el-icon>
-                    重置
-                  </el-button>
-                </el-col>
-              </el-row>
-            </el-card>
-            <!-- 商品列表 -->
+              
+              <el-select v-model="filterParams.sortBy" placeholder="综合排序" style="width: 140px" @change="handleFilter">
+                <el-option label="综合排序" value="" />
+                <el-option label="价格由低到高" value="price_asc" />
+                <el-option label="价格由高到低" value="price_desc" />
+                <el-option label="销量热度" value="sales_desc" />
+                <el-option label="最新上架" value="create_time_desc" />
+              </el-select>
+
+              <div class="price-filter" style="display: flex; align-items: center; gap: 6px;">
+                <el-input-number v-model="filterParams.minPrice" :min="0" :controls="false" placeholder="最低价" style="width: 80px" @change="handleFilter"/>
+                <span style="color: var(--text-sub)">-</span>
+                <el-input-number v-model="filterParams.maxPrice" :min="0" :controls="false" placeholder="最高价" style="width: 80px" @change="handleFilter"/>
+              </div>
+
+              <el-button link type="primary" @click="handleReset">
+                <el-icon><Refresh /></el-icon> 重置
+              </el-button>
+            </div>
+
+            <!-- 商品列表，带自研加载效果 -->
             <el-card class="product-card">
               <template #header>
                 <h3>商家商品</h3>
               </template>
-              <div v-for="shop in merchantGroups" :key="shop.id" class="merchant-card">
-                <div class="merchant-head">
+              <div v-loading="loading">
+                <el-empty v-if="merchantGroups.length === 0 && !loading" description="暂无相关商品或商铺~" />
+                <div v-else>
+                  <div v-for="shop in merchantGroups" :key="shop.id" class="merchant-card">
+                    <div class="merchant-head">
                   <div class="merchant-meta" @click="navigateToStore(shop.id)">
                     <el-avatar :size="54" :src="shop.avatar">{{ shop.name?.[0] || '店' }}</el-avatar>
                     <div>
@@ -121,6 +120,8 @@
                     </div>
                   </div>
                 </div>
+                </div>
+              </div>
               </div>
               <!-- 分页 -->
               <el-pagination

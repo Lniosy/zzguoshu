@@ -70,6 +70,16 @@
             <h2>{{ pageTitle }}</h2>
           </div>
           <div class="header-right">
+            <el-button 
+              type="success" 
+              plain 
+              size="default" 
+              class="back-btn" 
+              @click="navigate('/')"
+            >
+              <el-icon><HomeFilled /></el-icon>
+              <span>返回前台</span>
+            </el-button>
             <el-dropdown @command="handleCommand">
               <span class="user-info">
                 <el-avatar :size="40" :src="userInfo?.avatar">
@@ -106,6 +116,7 @@ import { useRoute } from 'vue-router'
 import { useAppNavigation } from '@/composables/useAppNavigation'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
+import { HomeFilled, House, User, Goods, Ticket, Shop, DataAnalysis, Document, Setting, SwitchButton } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -201,6 +212,11 @@ const handleCommand = (command) => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 15px;
+}
+
+.back-btn {
+  margin-right: 5px;
 }
 
 .user-info {
