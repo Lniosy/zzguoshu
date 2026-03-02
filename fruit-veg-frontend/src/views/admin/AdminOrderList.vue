@@ -61,7 +61,7 @@
         <el-table-column prop="phone" label="用户手机号" min-width="130" />
         <el-table-column prop="totalAmount" label="订单金额" width="120">
           <template #default="{ row }">
-            ¥{{ row.totalAmount.toFixed(2) }}
+            ¥{{ (row.totalAmount || 0).toFixed(2) }}
           </template>
         </el-table-column>
         <el-table-column prop="status" label="订单状态" width="100">

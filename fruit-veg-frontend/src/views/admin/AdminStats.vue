@@ -42,7 +42,7 @@
           <div class="stat-content">
             <div class="stat-info">
               <p class="stat-label">总销售额</p>
-              <h3 class="stat-value">¥{{ (stats.totalAmount / 100).toFixed(2) }}</h3>
+              <h3 class="stat-value">¥{{ ((stats.totalAmount || 0) / 100).toFixed(2) }}</h3>
             </div>
             <div class="stat-icon"><el-icon class="icon"><Money /></el-icon></div>
           </div>

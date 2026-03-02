@@ -32,6 +32,7 @@
             placeholder="请选择审核状态"
             prefix-icon="CircleCheck"
             :clearable="true"
+            :disabled="route.path === '/admin/merchant-applications'"
             style="width: 120px"
           >
             <el-option label="待审核" :value="0" />
@@ -123,6 +124,36 @@
         class="pagination"
       />
     </el-card>
+
+    <!-- 商家详情弹窗 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="商家详情"
+      width="600px"
+      destroy-on-close
+    >
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="商家ID">{{ currentMerchant.id }}</el-descriptions-item>
+        <el-descriptions-item label="商家名称">{{ currentMerchant.name }}</el-descriptions-item>
+        <el-descriptions-item label="联系人">{{ currentMerchant.contactName }}</el-descriptions-item>
+        <el-descriptions-item label="联系电话">{{ currentMerchant.contactPhone }}</el-descriptions-item>
+        <el-descriptions-item label="店铺地址">{{ currentMerchant.address }}</el-descriptions-item>
+        <el-descriptions-item label="审核状态">
+          <el-tag :type="currentMerchant.auditStatus === 1 ? 'success' : currentMerchant.auditStatus === 2 ? 'danger' : 'warning'">
+            {{ currentMerchant.auditStatus === 1 ? '审核通过' : currentMerchant.auditStatus === 2 ? '审核拒绝' : '待审核' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ currentMerchant.createTime }}</el-descriptions-item>
+        <el-descriptions-item label="店铺描述" v-if="currentMerchant.description">
+          {{ currentMerchant.description }}
+        </el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="detailDialogVisible = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -148,16 +179,38 @@ const pagination = reactive({
   total: 0
 })
 const selectedMerchants = ref([])
+const detailDialogVisible = ref(false)
+const currentMerchant = ref({})
+
+// 监听路由变化，解决组件复用冲突
+import { watch, onMounted } from 'vue'
+
+const initFromRoute = () => {
+  if (route.path === '/admin/merchant-applications') {
+    searchForm.auditStatus = 0
+  } else {
+    searchForm.auditStatus = ''
+  }
+}
+
+watch(() => route.path, () => {
+  initFromRoute()
+  handleSearch()
+})
 
 // 方法
 const fetchMerchantList = async () => {
   loading.value = true
   try {
     const params = {
-      ...searchForm,
       page: pagination.current,
       pageSize: pagination.pageSize
     }
+    if (searchForm.name) params.name = searchForm.name;
+    if (searchForm.contactName) params.contactName = searchForm.contactName;
+    if (searchForm.contactPhone) params.contactPhone = searchForm.contactPhone;
+    if (searchForm.auditStatus !== '') params.auditStatus = searchForm.auditStatus;
+
     const response = await getMerchantList(params)
     merchantList.value = response.records
     pagination.total = response.total
@@ -178,7 +231,7 @@ const handleReset = () => {
   searchForm.name = ''
   searchForm.contactName = ''
   searchForm.contactPhone = ''
-  searchForm.auditStatus = ''
+  initFromRoute()
   pagination.current = 1
   fetchMerchantList()
 }
@@ -195,9 +248,10 @@ const handleAudit = async (row, status) => {
 }
 
 const handleView = (row) => {
-  console.log('查看商家详情:', row)
-  ElMessage.info('查看商家详情功能待实现')
+  currentMerchant.value = { ...row }
+  detailDialogVisible.value = true
 }
+
 
 const handleSelectionChange = (selection) => {
   selectedMerchants.value = selection
@@ -214,10 +268,10 @@ const handleCurrentChange = (current) => {
 }
 
 // 初始化
-if (route.path === '/admin/merchant-applications') {
-  searchForm.auditStatus = 0
-}
-fetchMerchantList()
+onMounted(() => {
+  initFromRoute()
+  fetchMerchantList()
+})
 </script>
 
 <style scoped>

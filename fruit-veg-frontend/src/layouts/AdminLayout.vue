@@ -157,7 +157,15 @@ const handleCommand = (command) => {
 
 <style scoped>
 .admin-dashboard {
-  min-height: 100vh;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dashboard > .el-container {
+  height: 100%;
+  overflow: hidden;
 }
 
 .admin-sidebar {
@@ -165,12 +173,22 @@ const handleCommand = (command) => {
   color: #bfcbd9;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* 隐藏侧边栏滚动条但保留功能 */
+.admin-sidebar::-webkit-scrollbar {
+  width: 0;
 }
 
 .logo {
+  flex-shrink: 0;
   padding: 20px;
   text-align: center;
   border-bottom: 1px solid #263445;
+  background-color: #304156;
 }
 
 .logo h3 {
@@ -187,10 +205,15 @@ const handleCommand = (command) => {
 
 .admin-menu {
   border-right: none;
+  flex: 1;
 }
 
 .admin-main {
   background-color: #f0f2f5;
+  display: flex;
+  flex-direction: column; 
+  height: 100%;
+  overflow: hidden;
 }
 
 .admin-header {
@@ -201,6 +224,8 @@ const handleCommand = (command) => {
   align-items: center;
   padding: 0 20px;
   height: 60px;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .header-left h2 {
@@ -239,6 +264,9 @@ const handleCommand = (command) => {
 }
 
 .admin-content {
+  flex: 1;
+  overflow-y: auto;
   padding: 20px;
+  box-sizing: border-box;
 }
 </style>

@@ -66,7 +66,7 @@
             <div class="product-info">
               <el-image
                 :src="row.coverImage"
-                :preview-src-list="row.images?.split(',')"
+                :preview-src-list="row.images ? row.images.split(',') : []"
                 style="width: 40px; height: 40px; border-radius: 4px"
                 fit="cover"
               />
@@ -77,7 +77,7 @@
         <el-table-column prop="categoryName" label="商品分类" min-width="100" />
         <el-table-column prop="price" label="价格" width="100">
           <template #default="{ row }">
-            ¥{{ row.price.toFixed(2) }}
+            ¥{{ (row.price || 0).toFixed(2) }}
           </template>
         </el-table-column>
         <el-table-column prop="stock" label="库存" width="80" />
