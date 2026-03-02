@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { ElMessage } from 'element-plus'
 import HomeView from '../views/public/HomeView.vue'
 
 const router = createRouter({
@@ -85,13 +86,13 @@ const router = createRouter({
       path: '/merchant/shop',
       name: 'merchant-shop',
       component: () => import('../views/merchant/ShopManage.vue'),
-      meta: { requireAuth: true }
+      meta: { requireAuth: true, requireMerchant: true }
     },
     {
       path: '/merchant/shop/edit',
       name: 'merchant-shop-edit',
       component: () => import('../views/merchant/ShopEdit.vue'),
-      meta: { requireAuth: true }
+      meta: { requireAuth: true, requireMerchant: true }
     },
     {
       path: '/products',
@@ -247,6 +248,14 @@ router.beforeEach((to, from, next) => {
           next()
         } else {
           next('/') // 无权限跳转到首页
+        }
+      } else if (to.meta.requireMerchant) {
+        // 检查是否需要商家权限
+        if (userStore.isMerchant || userStore.isAdmin) {
+          next()
+        } else {
+          ElMessage.warning('您还不是商家，请先申请入驻')
+          next('/merchant/apply')
         }
       } else {
         next()

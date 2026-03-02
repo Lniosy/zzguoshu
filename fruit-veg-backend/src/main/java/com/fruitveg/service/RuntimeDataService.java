@@ -121,7 +121,14 @@ public class RuntimeDataService {
         Map<String, Object> m4 = merchant(4L, "果岭优选", "精品水果礼盒与家庭常购水果", "赵六", "13900139003", "郑州市郑东新区商务外环路99号", "/api/images/VCG211327413757.jpg");
         Map<String, Object> m5 = merchant(5L, "南郊时蔬集", "南部城区时令果蔬，2小时同城达", "钱七", "13900139004", "郑州市二七区大学南路188号", "/api/images/VCG211500639828.jpg");
         merchants.addAll(Arrays.asList(m1, m2, m3, m4, m5));
-        merchantByUserId.put(1L, m1);
+
+        // 为每个内置商家创建对应的用户账号并绑定映射
+        ensureMerchantUserAccounts();
+        merchantByUserId.put(getMerchantUserIdFromDb("merchant1"), m1);
+        merchantByUserId.put(getMerchantUserIdFromDb("merchant2"), m2);
+        merchantByUserId.put(getMerchantUserIdFromDb("merchant3"), m3);
+        merchantByUserId.put(getMerchantUserIdFromDb("merchant4"), m4);
+        merchantByUserId.put(getMerchantUserIdFromDb("merchant5"), m5);
 
         bindProductMerchant(1L, 1L);
         bindProductMerchant(2L, 1L);
@@ -430,6 +437,9 @@ public class RuntimeDataService {
 
     public Map<String, Object> saveMerchantProduct(Long userId, Map<String, Object> payload) {
         Long merchantId = getMerchantIdByUserId(userId);
+        if (merchantId == null) {
+            return null; // 用户不是商家
+        }
         Long id = toLong(payload.get("id"));
         Map<String, Object> row;
         if (id == null) {
@@ -1054,11 +1064,16 @@ public class RuntimeDataService {
         if (m != null) {
             return new LinkedHashMap<>(m);
         }
-        return new LinkedHashMap<>(merchants.get(0));
+        // 用户不是商家，返回 null
+        return null;
     }
 
     public Map<String, Object> updateMerchantInfo(Long userId, Map<String, Object> payload) {
-        Map<String, Object> m = merchantByUserId.computeIfAbsent(userId, ignored -> new LinkedHashMap<>(merchants.get(0)));
+        Map<String, Object> m = merchantByUserId.get(userId);
+        if (m == null) {
+            // 用户不是商家，不允许编辑
+            return null;
+        }
         if (payload != null) {
             m.putAll(payload);
         }
@@ -1165,6 +1180,9 @@ public class RuntimeDataService {
 
     public Map<String, Object> createMerchantCirclePost(Long userId, Map<String, Object> payload) {
         Long merchantId = getMerchantIdByUserId(userId);
+        if (merchantId == null) {
+            return null; // 用户不是商家
+        }
         String merchantName = getMerchantNameByUserId(userId);
         long id = circlePostIdSeq.incrementAndGet();
         Map<String, Object> post = new LinkedHashMap<>();
@@ -1715,7 +1733,8 @@ public class RuntimeDataService {
         if (merchant != null) {
             return ((Number) merchant.get("id")).longValue();
         }
-        return 1L;
+        // 用户不是商家，返回 null 而非默认值
+        return null;
     }
 
     private String getMerchantNameByUserId(Long userId) {
@@ -1723,7 +1742,7 @@ public class RuntimeDataService {
         if (merchant != null && merchant.get("name") != null) {
             return String.valueOf(merchant.get("name"));
         }
-        return "绿源果蔬店";
+        return "未知商家";
     }
 
     private String getMerchantNameById(Long merchantId) {
@@ -1789,6 +1808,74 @@ public class RuntimeDataService {
         } catch (Exception ignored) {
         }
     }
+
+    /**
+     * 为内置的5个商家创建对应的系统用户账号（如果还不存在的话）。
+     * 账号格式: merchant1~merchant5，密码统一为 123456 (BCrypt 加密)。
+     */
+    private void ensureMerchantUserAccounts() {
+        // BCrypt 编码的 "123456"
+        String encodedPassword = "$2a$10$gQcDiuivi6sJxJ3.6pbNJ.uRVawT0pogiT6TCSydPkUIJSNXNXL5y";
+        String[][] merchantUsers = {
+                {"merchant1", "13900139000", "绿源果蔬店店长"},
+                {"merchant2", "13900139001", "中牟鲜采果园店长"},
+                {"merchant3", "13900139002", "惠济绿叶仓店长"},
+                {"merchant4", "13900139003", "果岭优选店长"},
+                {"merchant5", "13900139004", "南郊时蔬集店长"}
+        };
+        for (String[] mu : merchantUsers) {
+            try {
+                Integer count = jdbcTemplate.queryForObject(
+                        "SELECT COUNT(*) FROM sys_user WHERE username = ?",
+                        Integer.class, mu[0]);
+                if (count == null || count == 0) {
+                    jdbcTemplate.update(
+                            "INSERT INTO sys_user (username, password, phone, nickname, status, create_time, update_time) "
+                                    + "VALUES (?, ?, ?, ?, 1, NOW(), NOW())",
+                            mu[0], encodedPassword, mu[1], mu[2]);
+                }
+            } catch (Exception e) {
+                // 手机号可能已被其他用户占用，尝试用备用手机号
+                try {
+                    Integer count = jdbcTemplate.queryForObject(
+                            "SELECT COUNT(*) FROM sys_user WHERE username = ?",
+                            Integer.class, mu[0]);
+                    if (count == null || count == 0) {
+                        String altPhone = "199" + mu[1].substring(3); // 替换前缀避免冲突
+                        jdbcTemplate.update(
+                                "INSERT INTO sys_user (username, password, phone, nickname, status, create_time, update_time) "
+                                        + "VALUES (?, ?, ?, ?, 1, NOW(), NOW())",
+                                mu[0], encodedPassword, altPhone, mu[2]);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        // 同步更新 biz_merchant 表的 user_id 绑定
+        for (int i = 1; i <= 5; i++) {
+            try {
+                Long userId = getMerchantUserIdFromDb("merchant" + i);
+                if (userId != null) {
+                    jdbcTemplate.update("UPDATE biz_merchant SET user_id = ? WHERE id = ?", userId, (long) i);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /**
+     * 从 sys_user 表查询商家用户账号的 ID
+     */
+    private Long getMerchantUserIdFromDb(String username) {
+        try {
+            return jdbcTemplate.queryForObject(
+                    "SELECT id FROM sys_user WHERE username = ?",
+                    Long.class, username);
+        } catch (Exception e) {
+            return 1L; // 兜底
+        }
+    }
+
 
     private boolean loadStateFromDb() {
         try {

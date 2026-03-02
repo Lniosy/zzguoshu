@@ -33,9 +33,10 @@ export const useMerchantStore = defineStore('merchant', {
         this.isMerchant = true
         return response
       } catch (error) {
-        ElMessage.error(error.message || '获取店铺信息失败')
+        // 非商家用户请求会返回 404，这是正常情况，不弹错误提示
         this.isMerchant = false
-        throw error
+        this.shopInfo = null
+        return null
       }
     },
     // 更新店铺信息

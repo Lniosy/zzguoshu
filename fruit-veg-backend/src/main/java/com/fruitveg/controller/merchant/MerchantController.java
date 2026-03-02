@@ -29,12 +29,20 @@ public class MerchantController {
 
     @GetMapping("/info")
     public Result<Map<String, Object>> getInfo(HttpServletRequest request) {
-        return Result.success(mockDataService.getMerchantInfo(getUserId(request)));
+        Map<String, Object> info = mockDataService.getMerchantInfo(getUserId(request));
+        if (info == null) {
+            return Result.error(404, "您还不是商家，请先申请入驻");
+        }
+        return Result.success(info);
     }
 
     @PutMapping("/info")
     public Result<Map<String, Object>> updateInfo(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
-        return Result.success(mockDataService.updateMerchantInfo(getUserId(request), payload));
+        Map<String, Object> info = mockDataService.updateMerchantInfo(getUserId(request), payload);
+        if (info == null) {
+            return Result.error(403, "您不是商家，无权编辑店铺信息");
+        }
+        return Result.success(info);
     }
 
     @GetMapping("/circle/list")

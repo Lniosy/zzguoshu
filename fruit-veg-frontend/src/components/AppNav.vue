@@ -41,8 +41,8 @@
               <el-dropdown-item command="after-sales">我的售后</el-dropdown-item>
               <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
               <el-dropdown-item command="cart">购物车</el-dropdown-item>
-              <el-dropdown-item command="merchant-apply">商家入驻</el-dropdown-item>
-              <el-dropdown-item command="merchant-shop">店铺管理</el-dropdown-item>
+              <el-dropdown-item command="merchant-apply" v-if="role !== 'MERCHANT'">商家入驻</el-dropdown-item>
+              <el-dropdown-item command="merchant-shop" v-if="role === 'MERCHANT'">店铺管理</el-dropdown-item>
               <el-dropdown-item v-if="role === 'ADMIN'" command="admin">管理后台</el-dropdown-item>
               <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
             </el-dropdown-menu>
