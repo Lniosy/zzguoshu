@@ -14,12 +14,20 @@ fruit-veg-frontend/node_modules/
 fruit-veg-frontend/dist/
 fruit-veg-frontend/.vite/
 
+# Maven installation (local only)
+apache-maven-*/
+
 # Playwright / test artifacts
+.playwright-mcp/
 .playwright-cli/
 output/playwright/screenshots/
 output/playwright/*.log
 output/playwright/test-*.env
 output/playwright/*.pdf
+
+# Test outputs and screenshots
+output/
+screenshots/
 
 # Common logs/temp
 *.log
@@ -32,6 +40,10 @@ fruit-veg-backend/spring-project.zip
 # Optional local uploads
 upload/
 config/mcporter.json
+
+# Database dumps and temporary files
+dump.json
+task_updates.txt
 
 # Proposal documents (keep local only)
 开题报告*.doc

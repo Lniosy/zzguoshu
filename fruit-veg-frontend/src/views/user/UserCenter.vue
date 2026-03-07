@@ -255,10 +255,16 @@ const syncRouteByTab = async () => {
 }
 
 const hydrateProfileForm = () => {
+  const genderMap = {
+    1: 'MALE',
+    2: 'FEMALE',
+    0: 'UNKNOWN'
+  }
+
   Object.assign(profileForm, {
     avatar: userInfo.value?.avatar || '',
     nickname: userInfo.value?.nickname || '',
-    gender: userInfo.value?.gender || 'UNKNOWN',
+    gender: genderMap[userInfo.value?.gender] || 'UNKNOWN',
     birthdate: userInfo.value?.birthdate || '',
     email: userInfo.value?.email || ''
   })
@@ -318,7 +324,16 @@ const handleMenuSelect = async (index) => {
 }
 
 const saveProfile = async () => {
-  await userStore.updateUserInfo({ ...profileForm })
+  const genderMap = {
+    'MALE': 1,
+    'FEMALE': 2,
+    'UNKNOWN': 0
+  }
+
+  await userStore.updateUserInfo({
+    ...profileForm,
+    gender: genderMap[profileForm.gender] || 0
+  })
   await userStore.fetchUserInfo()
   hydrateProfileForm()
   openProfileEditor.value = false

@@ -175,9 +175,15 @@ const handleSave = async () => {
     }
 
     // 调用更新用户信息 API
+    const genderMap = {
+      'MALE': 1,
+      'FEMALE': 2,
+      'UNKNOWN': 0
+    }
+
     await userStore.updateUserInfo({
       nickname: profileForm.nickname,
-      gender: profileForm.gender,
+      gender: genderMap[profileForm.gender] || 0,
       birthdate: profileForm.birthdate,
       email: profileForm.email,
       avatar: profileForm.avatar
@@ -219,10 +225,16 @@ const handleReset = async () => {
 const fetchUserInfo = async () => {
   try {
     const userInfo = await userStore.fetchUserInfo()
+    const genderMap = {
+      1: 'MALE',
+      2: 'FEMALE',
+      0: 'UNKNOWN'
+    }
+
     Object.assign(profileForm, {
       avatar: userInfo?.avatar || '',
       nickname: userInfo?.nickname || '',
-      gender: userInfo?.gender || 'UNKNOWN',
+      gender: genderMap[userInfo?.gender] || 'UNKNOWN',
       birthdate: userInfo?.birthdate || '',
       phone: userInfo?.phone || '',
       email: userInfo?.email || ''
