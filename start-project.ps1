@@ -59,10 +59,36 @@ try {
 
 Write-Host ""
 
+# Function to kill process using a specific port
+function Stop-ProcessOnPort {
+    param(
+        [int]$Port
+    )
+    
+    $portProcess = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | 
+                    Where-Object { $_.State -eq 'Listen' } | 
+                    Select-Object -ExpandProperty OwningProcess -ErrorAction SilentlyContinue
+    
+    if ($portProcess) {
+        Write-Host "WARNING - Port ${Port} is in use by PID $($portProcess.Id), stopping..." -ForegroundColor Yellow
+        try {
+            Stop-Process -Id $portProcess.Id -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            Write-Host "SUCCESS - Port ${Port} is now available" -ForegroundColor Green
+        } catch {
+            $errorMsg = $_.Exception.Message
+            Write-Host "ERROR - Failed to stop process on port ${Port}: ${errorMsg}" -ForegroundColor Red
+        }
+    }
+}
+
 # Start backend service
 Write-Host "[3/5] Starting backend service..." -ForegroundColor Yellow
 Write-Host "Backend path: $backendPath" -ForegroundColor Gray
 Write-Host "Maven path: $mavenPath" -ForegroundColor Gray
+
+# Check and stop process on port 8080 if exists
+Stop-ProcessOnPort -Port 8080
 
 $backendLogPath = Join-Path $backendPath "backend.log"
 if (Test-Path $backendLogPath) {
@@ -122,6 +148,9 @@ Write-Host ""
 # Start frontend service
 Write-Host "[4/5] Starting frontend service..." -ForegroundColor Yellow
 Write-Host "Frontend path: $frontendPath" -ForegroundColor Gray
+
+# Check and stop process on port 3000 if exists
+Stop-ProcessOnPort -Port 3000
 
 $frontendLogPath = Join-Path $frontendPath "frontend.log"
 if (Test-Path $frontendLogPath) {
@@ -203,6 +232,11 @@ Write-Host "  - Closing command window will NOT stop services" -ForegroundColor 
 Write-Host "  - To stop services, close the corresponding command windows manually" -ForegroundColor White
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Open browser to frontend application
+Write-Host "Opening browser to frontend application..." -ForegroundColor Yellow
+Start-Process "http://localhost:3000"
 Write-Host ""
 
 # Keep script running
