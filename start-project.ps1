@@ -65,20 +65,26 @@ function Stop-ProcessOnPort {
         [int]$Port
     )
     
-    $portProcess = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | 
-                    Where-Object { $_.State -eq 'Listen' } | 
-                    Select-Object -ExpandProperty OwningProcess -ErrorAction SilentlyContinue
-    
-    if ($portProcess) {
-        Write-Host "WARNING - Port ${Port} is in use by PID $($portProcess.Id), stopping..." -ForegroundColor Yellow
-        try {
-            Stop-Process -Id $portProcess.Id -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 2
-            Write-Host "SUCCESS - Port ${Port} is now available" -ForegroundColor Green
-        } catch {
-            $errorMsg = $_.Exception.Message
-            Write-Host "ERROR - Failed to stop process on port ${Port}: ${errorMsg}" -ForegroundColor Red
+    try {
+        $portProcess = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | 
+                        Where-Object { $_.State -eq 'Listen' } | 
+                        Select-Object -ExpandProperty OwningProcess -ErrorAction SilentlyContinue
+        
+        if ($portProcess -and $portProcess -gt 0) {
+            Write-Host "WARNING - Port ${Port} is in use by PID ${portProcess}, stopping..." -ForegroundColor Yellow
+            try {
+                Stop-Process -Id $portProcess -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 2
+                Write-Host "SUCCESS - Port ${Port} is now available" -ForegroundColor Green
+            } catch {
+                $errorMsg = $_.Exception.Message
+                Write-Host "ERROR - Failed to stop process on port ${Port}: ${errorMsg}" -ForegroundColor Red
+            }
+        } else {
+            Write-Host "Port ${Port} is available" -ForegroundColor Green
         }
+    } catch {
+        Write-Host "ERROR - Failed to check port ${Port}: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
@@ -92,7 +98,11 @@ Stop-ProcessOnPort -Port 8080
 
 $backendLogPath = Join-Path $backendPath "backend.log"
 if (Test-Path $backendLogPath) {
-    Remove-Item $backendLogPath -Force
+    try {
+        Remove-Item $backendLogPath -Force -ErrorAction Stop
+    } catch {
+        Write-Host "WARNING - Cannot delete old log file, will append to it" -ForegroundColor Yellow
+    }
 }
 
 Write-Host "Start command: mvn spring-boot:run" -ForegroundColor Gray
@@ -154,7 +164,11 @@ Stop-ProcessOnPort -Port 3000
 
 $frontendLogPath = Join-Path $frontendPath "frontend.log"
 if (Test-Path $frontendLogPath) {
-    Remove-Item $frontendLogPath -Force
+    try {
+        Remove-Item $frontendLogPath -Force -ErrorAction Stop
+    } catch {
+        Write-Host "WARNING - Cannot delete old log file, will append to it" -ForegroundColor Yellow
+    }
 }
 
 Write-Host "Start command: npm run dev" -ForegroundColor Gray
