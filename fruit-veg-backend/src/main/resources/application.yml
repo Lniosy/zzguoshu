@@ -1,8 +1,16 @@
 # 服务器配置
 server:
   port: 8080
+  tomcat:
+    uri-encoding: UTF-8
   servlet:
     context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
 
 # Spring配置
 spring:
@@ -12,6 +20,8 @@ spring:
     url: jdbc:mysql://localhost:3306/fruit_veg_sales?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&connectionCollation=utf8mb4_unicode_ci
     username: root
     password: 123456
+    hikari:
+      connection-init-sql: SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
   # 文件上传限制
   servlet:
     multipart:

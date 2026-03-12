@@ -34,9 +34,9 @@
             <!-- 移动端简易分类选单 -->
             <div class="mobile-category hidden-sm-and-up" style="margin-bottom: 12px">
                <el-cascader
-                 v-model="filterParams.categoryId"
+                 v-model="filterParams.category"
                  :options="categoryTree"
-                 :props="{ value: 'cateId', label: 'cateName', children: 'children', checkStrictly: true }"
+                 :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, emitPath: false }"
                  placeholder="全部分类"
                  style="width: 100%"
                  @change="handleFilter"
@@ -116,7 +116,24 @@
                       <h5 class="product-name" @click="navigateToProductDetail(product.id)">{{ product.name }}</h5>
                       <p class="product-price">¥{{ Number(product.price).toFixed(2) }}</p>
                       <p class="product-brief">月售 {{ product.sales }} · 库存 {{ product.stock }}</p>
-                      <el-button type="danger" circle size="small" @click="handleAddToCart(product)">+</el-button>
+                      <el-button
+                        v-if="!isAdmin"
+                        type="danger"
+                        circle
+                        size="small"
+                        @click="handleAddToCart(product)"
+                      >
+                        +
+                      </el-button>
+                      <el-button
+                        v-else
+                        type="primary"
+                        plain
+                        size="small"
+                        @click="navigate('/admin/products')"
+                      >
+                        管理
+                      </el-button>
                     </div>
                   </div>
                 </div>
@@ -156,6 +173,7 @@ const { navigate } = useAppNavigation()
 const route = useRoute()
 const userStore = useUserStore()
 const cartStore = useCartStore()
+const isAdmin = computed(() => userStore.isAdmin)
 
 // 响应式数据
 const searchKeyword = ref('')
@@ -245,6 +263,11 @@ const navigateToStore = (merchantId) => {
 }
 
 const handleAddToCart = (product) => {
+  if (isAdmin.value) {
+    ElMessage.info('管理员请在管理后台管理商品')
+    navigate('/admin/products')
+    return
+  }
   if (!userStore.getIsLoggedIn) {
     ElMessage.warning('请先登录')
     navigate('/login')
@@ -333,11 +356,17 @@ onMounted(() => {
 
 .category-card {
   height: 100%;
+  max-height: 72vh;
+  overflow: auto;
+  position: sticky;
+  top: 84px;
 }
 
 .category-tree :deep(.el-tree-node__content) {
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: 10px;
+  min-height: 38px;
+  font-size: 14px;
 }
 
 .category-tree :deep(.el-tree-node__content:hover) {

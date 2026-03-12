@@ -39,9 +39,9 @@
             <el-image v-for="img in post.images" :key="img" :src="img" fit="cover" class="img" preview-teleported />
           </div>
           <div class="post-actions">
-            <el-button @click="onLike(post)">👍 点赞 {{ post.likeCount }}</el-button>
+            <el-button @click="onLike(post)">{{ isAdmin ? '管理动态' : `👍 点赞 ${post.likeCount}` }}</el-button>
             <el-button @click="openComment(post)">💬 评论 {{ post.commentCount }}</el-button>
-            <el-button type="primary" @click="toProduct(post)">去购买</el-button>
+            <el-button type="primary" @click="toProduct(post)">{{ isAdmin ? '管理商品' : '去购买' }}</el-button>
           </div>
         </el-card>
       </el-col>
@@ -100,6 +100,7 @@ const router = useRouter()
 const { navigate } = useAppNavigation()
 const userStore = useUserStore()
 const isLoggedIn = computed(() => userStore.getIsLoggedIn)
+const isAdmin = computed(() => userStore.isAdmin)
 
 const list = ref([])
 const followedMerchants = ref([])
@@ -127,6 +128,10 @@ const fetchFollowedMerchants = async () => {
 }
 
 const onLike = async (post) => {
+  if (isAdmin.value) {
+    navigate('/admin/content')
+    return
+  }
   if (!ensureLogin()) return
   await likeCircle(post.id)
   post.likeCount += 1
@@ -152,6 +157,10 @@ const submitComment = async () => {
 }
 
 const toProduct = (post) => {
+  if (isAdmin.value) {
+    navigate('/admin/products')
+    return
+  }
   const pid = post.productIds?.[0]
   if (pid) navigate(`/products/${pid}`)
 }

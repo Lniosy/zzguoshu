@@ -3,16 +3,18 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppNav from '@/components/AppNav.vue'
 import { useCartStore } from '@/stores/cart'
+import { useUserStore } from '@/stores/user'
 import { useAppNavigation } from '@/composables/useAppNavigation'
 
 const route = useRoute()
 const cartStore = useCartStore()
+const userStore = useUserStore()
 const { navigate } = useAppNavigation()
 const showAppNav = computed(() => {
   if (route.meta?.hideGlobalNav) return false
   return !route.path.startsWith('/admin')
 })
-const showCartFloat = computed(() => showAppNav.value && !route.path.startsWith('/cart'))
+const showCartFloat = computed(() => showAppNav.value && !route.path.startsWith('/cart') && !userStore.isAdmin)
 </script>
 
 <template>

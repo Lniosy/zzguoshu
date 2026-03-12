@@ -116,6 +116,11 @@ const router = createRouter({
       component: () => import('../views/merchant/MerchantStoreView.vue')
     },
     {
+      path: '/trace',
+      name: 'trace-search',
+      component: () => import('../views/public/TraceView.vue')
+    },
+    {
       path: '/trace/detail/:id',
       name: 'trace-detail',
       component: () => import('../views/public/TraceView.vue')

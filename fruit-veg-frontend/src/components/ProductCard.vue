@@ -14,8 +14,9 @@
         <span class="original" v-if="product.originalPrice">¥{{ Number(product.originalPrice).toFixed(2) }}</span>
       </div>
       <div class="product-actions">
-        <el-button type="primary" @click="emit('add-to-cart', product)">加入购物车</el-button>
-        <el-button @click="emit('navigate', `/products/${product.id}`)">查看详情</el-button>
+        <el-button v-if="!props.isAdmin" type="primary" @click="emit('add-to-cart', product)">加入购物车</el-button>
+        <el-button v-else type="primary" @click="emit('navigate', '/admin/products')">编辑商品</el-button>
+        <el-button @click="emit('navigate', `/products/${product.id}`)">{{ props.isAdmin ? '查看商品' : '查看详情' }}</el-button>
       </div>
     </div>
   </el-card>
@@ -26,6 +27,10 @@ const props = defineProps({
   product: {
     type: Object,
     required: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 })
 

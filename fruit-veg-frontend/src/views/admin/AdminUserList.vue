@@ -98,12 +98,32 @@
         class="pagination"
       />
     </el-card>
+
+    <el-dialog v-model="detailDialogVisible" title="用户详情" width="560px">
+      <el-descriptions v-loading="detailLoading" :column="2" border>
+        <el-descriptions-item label="ID">{{ userDetail.id || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="账号">{{ userDetail.username || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="昵称">{{ userDetail.nickname || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="手机号">{{ userDetail.phone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="角色">{{ userDetail.role || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="userDetail.status === 1 ? 'success' : 'danger'">
+            {{ userDetail.status === 1 ? '正常' : '禁用' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ userDetail.createTime || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="更新时间">{{ userDetail.updateTime || '-' }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { exportUsers, getUserList, toggleUserStatus } from '@/api/admin'
+import { exportUsers, getUserDetail, getUserList, toggleUserStatus } from '@/api/admin'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 响应式数据
@@ -120,6 +140,9 @@ const pagination = reactive({
   total: 0
 })
 const selectedUsers = ref([])
+const detailDialogVisible = ref(false)
+const detailLoading = ref(false)
+const userDetail = ref({})
 
 // 方法
 const fetchUserList = async () => {
@@ -178,9 +201,17 @@ const handleToggleStatus = async (row) => {
   }
 }
 
-const handleView = (row) => {
-  console.log('查看用户详情:', row)
-  ElMessage.info('查看用户详情功能待实现')
+const handleView = async (row) => {
+  detailDialogVisible.value = true
+  detailLoading.value = true
+  try {
+    userDetail.value = await getUserDetail(row.id)
+  } catch (error) {
+    ElMessage.error('获取用户详情失败')
+    detailDialogVisible.value = false
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 const handleSelectionChange = (selection) => {

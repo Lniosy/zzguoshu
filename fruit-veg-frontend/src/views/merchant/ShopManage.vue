@@ -11,8 +11,8 @@
         </div>
       </el-header>
       <el-main class="shop-main">
-        <el-tabs>
-          <el-tab-pane label="店铺信息">
+        <el-tabs v-model="activeTab">
+          <el-tab-pane label="店铺信息" name="shop">
             <el-card class="shop-info-card">
               <template #header>
                 <h3>店铺基本信息</h3>
@@ -41,7 +41,7 @@
             </el-card>
           </el-tab-pane>
 
-          <el-tab-pane label="商品管理">
+          <el-tab-pane label="商品管理" name="product">
             <el-card>
               <template #header>
                 <div class="pane-head">
@@ -73,7 +73,7 @@
             </el-card>
           </el-tab-pane>
 
-          <el-tab-pane label="果蔬圈管理">
+          <el-tab-pane label="果蔬圈管理" name="circle">
             <el-card>
               <template #header>
                 <div class="pane-head">
@@ -98,7 +98,7 @@
             </el-card>
           </el-tab-pane>
 
-          <el-tab-pane label="溯源维护">
+          <el-tab-pane label="溯源维护" name="trace">
             <el-card>
               <template #header>
                 <div class="pane-head">
@@ -121,7 +121,7 @@
             </el-card>
           </el-tab-pane>
 
-          <el-tab-pane label="订单履约">
+          <el-tab-pane label="订单履约" name="order">
             <el-card>
               <template #header>
                 <div class="pane-head">
@@ -155,7 +155,7 @@
             </el-card>
           </el-tab-pane>
 
-          <el-tab-pane label="数据统计">
+          <el-tab-pane label="数据统计" name="stats">
             <el-row :gutter="16">
               <el-col :span="8">
                 <el-card v-loading="loadingStats">
@@ -240,7 +240,13 @@
         <el-form-item label="价格"><el-input-number v-model="productForm.price" :min="0.01" :precision="2" /></el-form-item>
         <el-form-item label="原价"><el-input-number v-model="productForm.originalPrice" :min="0.01" :precision="2" /></el-form-item>
         <el-form-item label="库存"><el-input-number v-model="productForm.stock" :min="0" /></el-form-item>
-        <el-form-item label="图片URL"><el-input v-model="productForm.mainImage" /></el-form-item>
+        <el-form-item label="图片URL">
+          <el-input v-model="productForm.mainImage" placeholder="请粘贴商品主图URL（必填）">
+            <template #append>
+              <el-button @click="fillSampleProductImage">示例图</el-button>
+            </template>
+          </el-input>
+        </el-form-item>
         <el-form-item label="描述"><el-input v-model="productForm.description" type="textarea" :rows="3" /></el-form-item>
       </el-form>
       <template #footer>
@@ -301,6 +307,7 @@ import {
 const router = useRouter()
 const { navigate } = useAppNavigation()
 const merchantStore = useMerchantStore()
+const activeTab = ref('shop')
 
 const businessTypeMap = {
   FRUIT_WHOLESALE: '水果批发',
@@ -427,6 +434,10 @@ const submitProduct = async () => {
     ElMessage.warning('请输入商品名称')
     return
   }
+  if (!productForm.value.mainImage.trim()) {
+    ElMessage.warning('请填写商品图片URL（可点击“示例图”自动填充）')
+    return
+  }
   productSaving.value = true
   try {
     await saveMerchantProduct(productForm.value)
@@ -437,6 +448,17 @@ const submitProduct = async () => {
   } finally {
     productSaving.value = false
   }
+}
+
+const fillSampleProductImage = () => {
+  if (productForm.value.mainImage.trim()) return
+  const samples = [
+    '/api/images/VCG211490364476.webp',
+    '/api/images/VCG211412015500.webp',
+    '/api/images/VCG211450687680.webp',
+    '/api/images/VCG211583441112.webp'
+  ]
+  productForm.value.mainImage = samples[Math.floor(Math.random() * samples.length)]
 }
 
 const toggleProduct = async (row, status) => {

@@ -155,7 +155,7 @@ const handleSearch = () => {
     ElMessage.warning('请输入溯源 ID')
     return
   }
-  router.push(`/trace/${searchId.value.trim()}`)
+  router.push(`/trace/detail/${searchId.value.trim()}`)
 }
 
 const fetchTraceDetail = async (id) => {

@@ -6,7 +6,7 @@
           <h1 class="hero-title">郑州果蔬，新鲜直达</h1>
           <p class="hero-subtitle">当季直采 · 透明溯源 · 48小时冷链</p>
           <div class="quick-actions">
-            <el-button type="primary" size="large" @click="navigate('/products')">去逛商品</el-button>
+            <el-button type="primary" size="large" @click="navigateProductEntry">{{ isAdmin ? '管理商品' : '去逛商品' }}</el-button>
             <el-button size="large" @click="navigate('/circle')">看果蔬圈</el-button>
             <el-button type="success" size="large" plain @click="toAi">咨询 AI 专家</el-button>
           </div>
@@ -45,9 +45,9 @@
               <div class="card-title">快速入口</div>
             </template>
             <div class="guide-grid">
-              <div class="guide-item" @click="navigate('/products')">
+              <div class="guide-item" @click="navigateProductEntry">
                 <el-icon><Shop /></el-icon>
-                <span>选购商品</span>
+                <span>{{ isAdmin ? '编辑商品' : '选购商品' }}</span>
               </div>
               <div class="guide-item" @click="navigate('/circle')">
                 <el-icon><ChatDotRound /></el-icon>
@@ -87,6 +87,7 @@
           <el-col :xs="24" :sm="12" :md="6" v-for="product in hotProducts" :key="product.id" class="product-col">
             <ProductCard 
               :product="product" 
+              :is-admin="isAdmin"
               @navigate="navigate" 
               @add-to-cart="addToCart" 
             />
@@ -98,7 +99,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Shop, ChatDotRound, MagicStick, Search, ArrowRight } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
@@ -112,6 +113,7 @@ import ProductCard from '@/components/ProductCard.vue'
 const userStore = useUserStore()
 const cartStore = useCartStore()
 const { navigate } = useAppNavigation()
+const isAdmin = computed(() => userStore.isAdmin)
 
 const categories = ref([])
 const hotProducts = ref([])
@@ -136,6 +138,11 @@ const fetchHomeData = async () => {
 }
 
 const addToCart = (product) => {
+  if (isAdmin.value) {
+    ElMessage.info('管理员请在管理后台编辑商品')
+    navigate('/admin/products')
+    return
+  }
   if (!userStore.getIsLoggedIn) {
     ElMessage.warning('登录后可加入购物车')
     navigate('/login')
@@ -147,6 +154,14 @@ const addToCart = (product) => {
 
 const openCategory = (category) => {
   navigate({ path: '/products', query: { category: category.id } })
+}
+
+const navigateProductEntry = () => {
+  if (isAdmin.value) {
+    navigate('/admin/products')
+    return
+  }
+  navigate('/products')
 }
 
 const toAi = () => {
