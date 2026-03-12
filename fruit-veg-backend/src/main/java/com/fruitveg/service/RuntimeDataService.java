@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -473,6 +474,7 @@ public class RuntimeDataService {
         row.put("updateTime", now());
 
         traceByProduct.computeIfAbsent(((Number) row.get("id")).longValue(), pid -> trace(pid, String.valueOf(row.get("name"))));
+        syncMerchantProductToDb(row);
         return new LinkedHashMap<>(row);
     }
 
@@ -485,7 +487,9 @@ public class RuntimeDataService {
         if (row == null) {
             return false;
         }
-        row.put("auditStatus", auditStatus == null ? 1 : auditStatus);
+        int finalStatus = auditStatus == null ? 1 : auditStatus;
+        row.put("auditStatus", finalStatus);
+        syncMerchantProductStatusToDb(((Number) row.get("id")).longValue(), finalStatus);
         return true;
     }
 
@@ -532,11 +536,66 @@ public class RuntimeDataService {
             return null;
         }
         Map<String, Object> data = new LinkedHashMap<>();
-        String traceUrl = "http://localhost:3000/products/" + productId + "/trace";
+        String traceUrl = "http://localhost:3000/trace/detail/" + productId;
+        String encoded;
+        try {
+            encoded = URLEncoder.encode(traceUrl, "UTF-8");
+        } catch (Exception e) {
+            encoded = traceUrl;
+        }
         data.put("productId", productId);
         data.put("traceUrl", traceUrl);
-        data.put("qrUrl", "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + traceUrl);
+        data.put("qrUrl", "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encoded);
         return data;
+    }
+
+    private void syncMerchantProductToDb(Map<String, Object> row) {
+        try {
+            Long id = toLong(row.get("id"));
+            Long merchantId = toLong(row.get("merchantId"));
+            Long categoryId = toLong(row.get("categoryId"));
+            String name = String.valueOf(row.getOrDefault("name", "新商品"));
+            String mainImage = String.valueOf(row.getOrDefault("mainImage", image("product-merchant-" + id)));
+            String images = toJsonArrayString(row.get("images"));
+            BigDecimal price = BigDecimal.valueOf(toDouble(row.getOrDefault("price", 1)));
+            BigDecimal originalPrice = BigDecimal.valueOf(toDouble(row.getOrDefault("originalPrice", price)));
+            Integer stock = toInt(row.getOrDefault("stock", 100));
+            String unit = String.valueOf(row.getOrDefault("unit", "份"));
+            String description = String.valueOf(row.getOrDefault("description", ""));
+            Integer sales = toInt(row.getOrDefault("sales", 0));
+            Integer status = toInt(row.getOrDefault("auditStatus", 1)) == 1 ? 1 : 0;
+
+            jdbcTemplate.update(
+                    "INSERT INTO biz_product (id, merchant_id, category_id, name, main_image, images, price, original_price, stock, unit, description, sales, status, sort, deleted, create_time, update_time) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, NOW(), NOW()) " +
+                            "ON DUPLICATE KEY UPDATE merchant_id=VALUES(merchant_id), category_id=VALUES(category_id), name=VALUES(name), main_image=VALUES(main_image), images=VALUES(images), " +
+                            "price=VALUES(price), original_price=VALUES(original_price), stock=VALUES(stock), unit=VALUES(unit), description=VALUES(description), sales=VALUES(sales), status=VALUES(status), deleted=0, update_time=NOW()",
+                    id, merchantId, categoryId, name, mainImage, images, price, originalPrice, stock, unit, description, sales, status
+            );
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void syncMerchantProductStatusToDb(Long id, Integer auditStatus) {
+        try {
+            int status = auditStatus == null ? 1 : (auditStatus == 1 ? 1 : 0);
+            jdbcTemplate.update("UPDATE biz_product SET status = ?, deleted = 0, update_time = NOW() WHERE id = ?", status, id);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private String toJsonArrayString(Object images) {
+        try {
+            if (images instanceof String) {
+                return (String) images;
+            }
+            if (images instanceof Collection) {
+                return objectMapper.writeValueAsString(images);
+            }
+            return objectMapper.writeValueAsString(Collections.emptyList());
+        } catch (Exception e) {
+            return "[]";
+        }
     }
 
     public Map<String, Object> listUserOrders(Long userId, Integer page, Integer pageSize, String status, String orderNumber) {

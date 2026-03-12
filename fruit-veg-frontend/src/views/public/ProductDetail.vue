@@ -59,7 +59,7 @@
                 <el-icon><Location /></el-icon>
                 <span>{{ product.stock }}件库存</span>
               </div>
-              <div class="product-specs">
+              <div v-if="!isAdmin" class="product-specs">
                 <h4>规格选择</h4>
                 <el-radio-group v-model="selectedSpec" class="spec-radio-group">
                   <el-radio
@@ -72,7 +72,7 @@
                   </el-radio>
                 </el-radio-group>
               </div>
-              <div class="product-quantity">
+              <div v-if="!isAdmin" class="product-quantity">
                 <h4>购买数量</h4>
                 <el-input-number
                   v-model="purchaseQuantity"
@@ -83,27 +83,37 @@
                 />
               </div>
               <div class="product-actions">
-                <el-button
-                  type="primary"
-                  size="large"
-                  @click="handleAddToCart"
-                  :disabled="purchaseQuantity <= 0"
-                >
-                  <el-icon><ShoppingCart /></el-icon>
-                  加入购物车
-                </el-button>
-                <el-button
-                  type="success"
-                  size="large"
-                  @click="handleBuyNow"
-                  :disabled="purchaseQuantity <= 0"
-                >
-                  <el-icon><CreditCard /></el-icon>
-                  立即购买
-                </el-button>
-                <el-button size="large" @click="handleFavorite">
-                  收藏商品
-                </el-button>
+                <template v-if="!isAdmin">
+                  <el-button
+                    type="primary"
+                    size="large"
+                    @click="handleAddToCart"
+                    :disabled="purchaseQuantity <= 0"
+                  >
+                    <el-icon><ShoppingCart /></el-icon>
+                    加入购物车
+                  </el-button>
+                  <el-button
+                    type="success"
+                    size="large"
+                    @click="handleBuyNow"
+                    :disabled="purchaseQuantity <= 0"
+                  >
+                    <el-icon><CreditCard /></el-icon>
+                    立即购买
+                  </el-button>
+                  <el-button size="large" @click="handleFavorite">
+                    收藏商品
+                  </el-button>
+                </template>
+                <template v-else>
+                  <el-button type="primary" size="large" @click="handleAdminManageProduct">
+                    编辑商品
+                  </el-button>
+                  <el-button size="large" @click="navigateToTrace">
+                    查看溯源信息
+                  </el-button>
+                </template>
               </div>
             </el-card>
           </el-col>
@@ -163,7 +173,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppNavigation } from '@/composables/useAppNavigation'
 import { ArrowLeft, Picture, Goods, Location, ShoppingCart, CreditCard, Shop } from '@element-plus/icons-vue'
@@ -178,6 +188,7 @@ const { navigate } = useAppNavigation()
 const route = useRoute()
 const userStore = useUserStore()
 const cartStore = useCartStore()
+const isAdmin = computed(() => userStore.isAdmin)
 
 // 响应式数据
 const product = reactive({
@@ -207,6 +218,11 @@ const navigateBack = () => {
 }
 
 const handleAddToCart = () => {
+  if (isAdmin.value) {
+    ElMessage.info('管理员请在管理后台管理商品')
+    navigate('/admin/products')
+    return
+  }
   if (!userStore.getIsLoggedIn) {
     ElMessage.warning('请先登录')
     navigate('/login')
@@ -222,6 +238,11 @@ const handleAddToCart = () => {
 }
 
 const handleBuyNow = () => {
+  if (isAdmin.value) {
+    ElMessage.info('管理员不参与购买流程')
+    navigate('/admin/products')
+    return
+  }
   if (!userStore.getIsLoggedIn) {
     ElMessage.warning('请先登录')
     navigate('/login')
@@ -238,6 +259,10 @@ const handleBuyNow = () => {
 }
 
 const handleFavorite = async () => {
+  if (isAdmin.value) {
+    ElMessage.info('管理员请在管理后台管理商品')
+    return
+  }
   if (!userStore.getIsLoggedIn) {
     ElMessage.warning('请先登录')
     navigate('/login')
@@ -262,6 +287,10 @@ const navigateToAiExpert = () => {
     return
   }
   navigate('/ai-expert')
+}
+
+const handleAdminManageProduct = () => {
+  navigate('/admin/products')
 }
 
 // 获取商品详情

@@ -37,13 +37,14 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="user">个人中心</el-dropdown-item>
-              <el-dropdown-item command="orders">我的订单</el-dropdown-item>
-              <el-dropdown-item command="after-sales">我的售后</el-dropdown-item>
-              <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
-              <el-dropdown-item command="cart">购物车</el-dropdown-item>
-              <el-dropdown-item command="merchant-apply" v-if="role !== 'MERCHANT'">商家入驻</el-dropdown-item>
+              <el-dropdown-item v-if="role !== 'ADMIN'" command="orders">我的订单</el-dropdown-item>
+              <el-dropdown-item v-if="role !== 'ADMIN'" command="after-sales">我的售后</el-dropdown-item>
+              <el-dropdown-item v-if="role !== 'ADMIN'" command="favorites">我的收藏</el-dropdown-item>
+              <el-dropdown-item v-if="role !== 'ADMIN'" command="cart">购物车</el-dropdown-item>
+              <el-dropdown-item command="merchant-apply" v-if="role !== 'MERCHANT' && role !== 'ADMIN'">商家入驻</el-dropdown-item>
               <el-dropdown-item command="merchant-shop" v-if="role === 'MERCHANT'">店铺管理</el-dropdown-item>
               <el-dropdown-item v-if="role === 'ADMIN'" command="admin">管理后台</el-dropdown-item>
+              <el-dropdown-item v-if="role === 'ADMIN'" command="admin-traces">溯源管理</el-dropdown-item>
               <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -91,7 +92,8 @@ const routeMap = {
   cart: { path: '/cart', requireAuth: true },
   'merchant-apply': { path: '/merchant/apply', requireAuth: true },
   'merchant-shop': { path: '/merchant/shop', requireAuth: true },
-  admin: { path: '/admin', requireAuth: true }
+  admin: { path: '/admin', requireAuth: true },
+  'admin-traces': { path: '/admin/traces', requireAuth: true }
 }
 
 const isActive = (path) => {
@@ -115,7 +117,7 @@ const handleNav = (key) => {
   }
   const target = routeMap[key]
   if (!target) return
-  if (key === 'admin' && role.value !== 'ADMIN') {
+  if ((key === 'admin' || key === 'admin-traces') && role.value !== 'ADMIN') {
     ElMessage.warning('当前账号无管理后台权限')
     return
   }

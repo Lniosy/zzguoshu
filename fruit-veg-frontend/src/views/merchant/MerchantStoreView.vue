@@ -27,7 +27,24 @@
             <div class="product-title" @click="navigate(`/products/${item.id}`)">{{ item.name }}</div>
             <div class="price-line">
               <span>¥{{ Number(item.price).toFixed(2) }}</span>
-              <el-button circle type="primary" size="small" @click="addToCart(item)">+</el-button>
+              <el-button
+                v-if="!isAdmin"
+                circle
+                type="primary"
+                size="small"
+                @click="addToCart(item)"
+              >
+                +
+              </el-button>
+              <el-button
+                v-else
+                type="primary"
+                plain
+                size="small"
+                @click="navigate('/admin/products')"
+              >
+                管理
+              </el-button>
             </div>
           </el-card>
         </el-col>
@@ -46,7 +63,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAppNavigation } from '@/composables/useAppNavigation'
@@ -58,6 +75,7 @@ const route = useRoute()
 const { navigate } = useAppNavigation()
 const cartStore = useCartStore()
 const userStore = useUserStore()
+const isAdmin = computed(() => userStore.isAdmin)
 
 const loading = ref(false)
 const merchant = ref({})
@@ -77,6 +95,11 @@ const fetchData = async () => {
 }
 
 const addToCart = (product) => {
+  if (isAdmin.value) {
+    ElMessage.info('管理员请在管理后台管理商品')
+    navigate('/admin/products')
+    return
+  }
   if (!userStore.getIsLoggedIn) {
     ElMessage.warning('请先登录')
     navigate('/login')
