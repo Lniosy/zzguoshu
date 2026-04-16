@@ -71,6 +71,12 @@ public class SysUser implements Serializable {
     private Integer status;
 
     /**
+     * 角色：USER/MERCHANT/SUB_ADMIN/ADMIN
+     */
+    @TableField("role")
+    private String role;
+
+    /**
      * 创建时间
      */
     @TableField(value = "create_time", fill = FieldFill.INSERT)
@@ -161,6 +167,14 @@ public class SysUser implements Serializable {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public Date getCreateTime() {

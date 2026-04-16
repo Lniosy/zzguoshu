@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     gender TINYINT(1) NULL DEFAULT 0 COMMENT '性别：0未知 1男 2女',
     birthday DATE NULL COMMENT '生日',
     status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态：0禁用 1正常',
+    role VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色：USER/MERCHANT/SUB_ADMIN/ADMIN',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
@@ -241,8 +242,8 @@ INSERT INTO biz_category (parent_id, name, sort, status) VALUES
 -- --------------------------------------------------
 -- 创建系统管理员用户（密码：123456，已加密）
 -- --------------------------------------------------
-INSERT INTO sys_user (username, password, phone, nickname, status) VALUES
-('admin', '$2a$10$gQcDiuivi6sJxJ3.6pbNJ.uRVawT0pogiT6TCSydPkUIJSNXNXL5y', '13800138000', '系统管理员', 1);
+INSERT INTO sys_user (username, password, phone, nickname, status, role) VALUES
+('admin', '$2a$10$gQcDiuivi6sJxJ3.6pbNJ.uRVawT0pogiT6TCSydPkUIJSNXNXL5y', '13800138000', '系统管理员', 1, 'ADMIN');
 
 -- --------------------------------------------------
 -- 初始化商家、商品、溯源、首页内容

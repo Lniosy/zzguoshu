@@ -18,13 +18,12 @@
             <el-icon><House /></el-icon>
             <span>首页</span>
           </el-menu-item>
-          <el-sub-menu index="users">
+          <el-sub-menu v-if="!isSubAdmin" index="users">
             <template #title>
               <el-icon><User /></el-icon>
               <span>用户管理</span>
             </template>
             <el-menu-item index="/admin/users">用户列表</el-menu-item>
-            <el-menu-item index="/admin/roles">角色权限</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="products">
             <template #title>
@@ -32,9 +31,8 @@
               <span>商品管理</span>
             </template>
             <el-menu-item index="/admin/products">商品列表</el-menu-item>
-            <el-menu-item index="/admin/traces">溯源管理</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="orders">
+          <el-sub-menu v-if="!isSubAdmin" index="orders">
             <template #title>
               <el-icon><Ticket /></el-icon>
               <span>订单管理</span>
@@ -42,6 +40,10 @@
             <el-menu-item index="/admin/orders">订单列表</el-menu-item>
             <el-menu-item index="/admin/complaints">投诉处理</el-menu-item>
           </el-sub-menu>
+          <el-menu-item v-else index="/admin/complaints">
+            <el-icon><Ticket /></el-icon>
+            <span>投诉处理</span>
+          </el-menu-item>
           <el-sub-menu index="merchants">
             <template #title>
               <el-icon><Shop /></el-icon>
@@ -50,15 +52,15 @@
             <el-menu-item index="/admin/merchants">商家列表</el-menu-item>
             <el-menu-item index="/admin/merchant-applications">商家申请</el-menu-item>
           </el-sub-menu>
-          <el-menu-item index="/admin/stats">
+          <el-menu-item v-if="!isSubAdmin" index="/admin/stats">
             <el-icon><DataAnalysis /></el-icon>
             <span>数据统计</span>
           </el-menu-item>
-          <el-menu-item index="/admin/content">
+          <el-menu-item v-if="!isSubAdmin" index="/admin/content">
             <el-icon><Document /></el-icon>
             <span>公告资讯</span>
           </el-menu-item>
-          <el-menu-item index="/admin/settings">
+          <el-menu-item v-if="!isSubAdmin" index="/admin/settings">
             <el-icon><Setting /></el-icon>
             <span>系统参数</span>
           </el-menu-item>
@@ -89,7 +91,7 @@
               </span>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="settings">
+                  <el-dropdown-item v-if="!isSubAdmin" command="settings">
                     <el-icon><Setting /></el-icon>
                     <span>个人设置</span>
                   </el-dropdown-item>
@@ -123,15 +125,14 @@ const router = useRouter()
 const { navigate } = useAppNavigation()
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
+const isSubAdmin = computed(() => userStore.getRole === 'SUB_ADMIN')
 
 // 页面标题
 const pageTitle = computed(() => {
   const titles = {
     '/admin': '首页',
     '/admin/users': '用户管理',
-    '/admin/roles': '角色权限',
     '/admin/products': '商品管理',
-    '/admin/traces': '溯源管理',
     '/admin/orders': '订单管理',
     '/admin/complaints': '投诉处理',
     '/admin/merchants': '商家列表',

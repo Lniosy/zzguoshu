@@ -11,6 +11,7 @@ export const getUserDetail = (id) => request.get(`/admin/users/${id}`)
 // 禁用/启用用户
 export const toggleUserStatus = (id, status) => request.put(`/admin/users/${id}/status`, { status })
 export const exportUsers = (params) => request.get('/admin/users/export', { params })
+export const createSubAdmin = (data) => request.post('/admin/sub-admins', data)
 
 // 获取商品列表
 export const getProductList = (params) => request.get('/admin/products', { params })
@@ -53,6 +54,8 @@ export const deleteAdminBanner = (id) => request.delete(`/admin/content/banner/$
 export const getAdminNotices = (params) => request.get('/admin/content/notices', { params })
 export const saveAdminNotice = (data) => request.post('/admin/content/notice', data)
 export const deleteAdminNotice = (id) => request.delete(`/admin/content/notice/${id}`)
+export const getAdminCircleCommentList = (params) => request.get('/admin/circle/comments', { params })
+export const auditAdminCircleComment = (postId, commentId, data) => request.put(`/admin/circle/comments/${postId}/${commentId}/audit`, data)
 
 // 系统参数设置
 export const getSystemSettings = () => request.get('/admin/settings')

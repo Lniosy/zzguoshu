@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', {
     getDefaultAddress: (state) => state.addressList.find(address => address.isDefault),
     getRole: (state) => state.role,
     isAdmin: (state) => state.role === 'ADMIN',
+    isSubAdmin: (state) => state.role === 'SUB_ADMIN',
     isMerchant: (state) => state.role === 'MERCHANT',
     isUser: (state) => state.role === 'USER'
   },

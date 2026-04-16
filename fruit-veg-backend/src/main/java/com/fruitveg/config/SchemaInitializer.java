@@ -73,6 +73,7 @@ public class SchemaInitializer implements CommandLineRunner {
     }
 
     private void ensureSoftDeleteColumns() {
+        ensureColumnExists("sys_user", "role", "VARCHAR(20) DEFAULT 'USER'");
         ensureColumnExists("sys_user", "deleted", "TINYINT DEFAULT 0");
         ensureColumnExists("biz_merchant", "deleted", "TINYINT DEFAULT 0");
         ensureColumnExists("biz_category", "deleted", "TINYINT DEFAULT 0");

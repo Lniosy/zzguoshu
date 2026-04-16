@@ -109,6 +109,28 @@ public class MerchantController {
                 : Result.error(404, "订单不存在");
     }
 
+    @GetMapping("/after-sales")
+    public Result<Map<String, Object>> afterSales(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String orderNo,
+            HttpServletRequest request
+    ) {
+        return Result.success(mockDataService.listMerchantAfterSales(getUserId(request), page, pageSize, status, orderNo));
+    }
+
+    @PutMapping("/after-sales/{id}/handle")
+    public Result<Void> handleAfterSale(@PathVariable Long id,
+                                        @RequestBody(required = false) Map<String, String> payload,
+                                        HttpServletRequest request) {
+        String result = payload == null ? null : payload.get("result");
+        String remark = payload == null ? null : payload.get("remark");
+        return mockDataService.handleMerchantAfterSale(getUserId(request), id, result, remark)
+                ? Result.success()
+                : Result.error(404, "售后单不存在或无权限");
+    }
+
     @GetMapping("/products")
     public Result<Map<String, Object>> products(@RequestParam(required = false) Integer page,
                                                 @RequestParam(required = false) Integer pageSize,
@@ -129,10 +151,10 @@ public class MerchantController {
 
     @PutMapping("/products/{id}/status")
     public Result<Void> updateProductStatus(@PathVariable Long id, @RequestBody Map<String, Integer> payload, HttpServletRequest request) {
-        Integer status = payload == null ? 1 : payload.getOrDefault("auditStatus", 1);
+        Integer status = payload == null ? 0 : payload.getOrDefault("auditStatus", 0);
         return mockDataService.updateMerchantProductStatus(getUserId(request), id, status)
                 ? Result.success()
-                : Result.error(404, "商品不存在或无权限");
+            : Result.error(400, "仅支持提交审核，商品不存在或无权限");
     }
 
     @GetMapping("/trace/list")

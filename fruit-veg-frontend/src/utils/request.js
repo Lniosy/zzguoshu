@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import pinia from '@/stores'
 import router from '@/router'
 
 // 创建 axios 实例
@@ -15,7 +16,7 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   config => {
-    const userStore = useUserStore()
+    const userStore = useUserStore(pinia)
     if (userStore.getToken) {
       config.headers.Authorization = `Bearer ${userStore.getToken}`
     }
@@ -47,7 +48,7 @@ request.interceptors.response.use(
 
       if (status === 401) {
         // 未授权，清除用户信息并跳转登录页
-        const userStore = useUserStore()
+        const userStore = useUserStore(pinia)
         userStore.logout()
         ElMessageBox.alert('登录已过期，请重新登录', '提示', {
           confirmButtonText: '确定'

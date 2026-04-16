@@ -151,7 +151,7 @@ const submitComment = async () => {
     return
   }
   await commentCircle(activePost.value.id, { content: commentText.value.trim() })
-  ElMessage.success('评论成功')
+  ElMessage.success('评论已提交，待管理员审核后展示')
   commentVisible.value = false
   fetchList()
 }

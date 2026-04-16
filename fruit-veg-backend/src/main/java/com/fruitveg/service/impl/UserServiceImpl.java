@@ -133,6 +133,9 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
     }
 
     private String resolveRole(SysUser sysUser) {
+        if (sysUser.getRole() != null && !sysUser.getRole().trim().isEmpty()) {
+            return sysUser.getRole().trim().toUpperCase();
+        }
         if ("admin".equalsIgnoreCase(sysUser.getUsername())) {
             return "ADMIN";
         }

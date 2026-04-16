@@ -97,6 +97,8 @@ public class RuntimeDataService {
     @PostConstruct
     public void init() {
         if (loadStateFromDb()) {
+            ensureMerchant2HasShippableOrder();
+            persistStateSilently();
             return;
         }
         if (!categories.isEmpty()) {
@@ -141,7 +143,7 @@ public class RuntimeDataService {
         bindProductMerchant(8L, 5L);
 
         userOrders.add(sampleOrder(1L, "pending", 0));
-        userOrders.add(sampleOrder(2L, "delivered", 2));
+        userOrders.add(sampleOrder(2L, "shipped", 1));
         userOrders.add(sampleOrder(3L, "completed", 4));
 
         banners.add(banner(1L, "当季直采水果专场", image("banner-1"), "/products?category=1"));
@@ -448,7 +450,8 @@ public class RuntimeDataService {
             row.put("id", productIdSeq.incrementAndGet());
             row.put("merchantId", merchantId);
             row.put("sales", 0);
-            row.put("auditStatus", 1);
+            // 商家新建商品默认待审核，需管理员审核通过后才会上架
+            row.put("auditStatus", 0);
             products.add(0, row);
         } else {
             row = products.stream()
@@ -471,6 +474,8 @@ public class RuntimeDataService {
         String imageUrl = String.valueOf(payload.getOrDefault("mainImage", image("product-merchant-" + row.get("id"))));
         row.put("mainImage", imageUrl);
         row.put("images", Arrays.asList(imageUrl, image("product-merchant-detail-" + row.get("id"))));
+        // 商家编辑后重新进入待审核
+        row.put("auditStatus", 0);
         row.put("updateTime", now());
 
         traceByProduct.computeIfAbsent(((Number) row.get("id")).longValue(), pid -> trace(pid, String.valueOf(row.get("name"))));
@@ -487,7 +492,11 @@ public class RuntimeDataService {
         if (row == null) {
             return false;
         }
-        int finalStatus = auditStatus == null ? 1 : auditStatus;
+        // 商家仅允许提交审核，不能自行改为审核通过
+        if (auditStatus != null && auditStatus != 0) {
+            return false;
+        }
+        int finalStatus = 0;
         row.put("auditStatus", finalStatus);
         syncMerchantProductStatusToDb(((Number) row.get("id")).longValue(), finalStatus);
         return true;
@@ -744,7 +753,11 @@ public class RuntimeDataService {
     public boolean auditProduct(Long id, Integer status) {
         Map<String, Object> p = products.stream().filter(item -> Objects.equals(((Number) item.get("id")).longValue(), id)).findFirst().orElse(null);
         if (p == null) return false;
+        if (status == null || (status != 1 && status != 2)) {
+            return false;
+        }
         p.put("auditStatus", status);
+        syncMerchantProductStatusToDb(id, status);
         return true;
     }
 
@@ -855,6 +868,75 @@ public class RuntimeDataService {
                 .map(LinkedHashMap::new)
                 .collect(Collectors.toList());
         return pageResult(rows, page, pageSize);
+    }
+
+    public Map<String, Object> listMerchantAfterSales(Long userId, Integer page, Integer pageSize, String status, String orderNo) {
+        Long merchantId = getMerchantIdByUserId(userId);
+        if (merchantId == null) {
+            return pageResult(Collections.emptyList(), page, pageSize);
+        }
+        List<Map<String, Object>> rows = complaints.stream()
+                .filter(c -> Objects.equals(toLong(c.getOrDefault("merchantId", 0L)), merchantId))
+                .filter(c -> status == null || status.isEmpty() || Objects.equals(String.valueOf(c.get("status")), status))
+                .filter(c -> orderNo == null || orderNo.isEmpty() || String.valueOf(c.get("orderNo")).contains(orderNo))
+                .map(c -> {
+                    Map<String, Object> row = new LinkedHashMap<>(c);
+                    Long orderId = toLong(c.get("orderId"));
+                    Map<String, Object> order = userOrders.stream()
+                            .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), orderId))
+                            .findFirst().orElse(null);
+                    row.put("orderStatus", order == null ? "-" : String.valueOf(order.getOrDefault("status", "-")));
+                    return row;
+                })
+                .collect(Collectors.toList());
+        rows.sort((a, b) -> Long.compare(toLong(b.get("id")), toLong(a.get("id"))));
+        return pageResult(rows, page, pageSize);
+    }
+
+    public boolean handleMerchantAfterSale(Long userId, Long complaintId, String result, String remark) {
+        Long merchantId = getMerchantIdByUserId(userId);
+        if (merchantId == null) {
+            return false;
+        }
+        Map<String, Object> complaint = complaints.stream()
+                .filter(c -> Objects.equals(((Number) c.get("id")).longValue(), complaintId))
+                .filter(c -> Objects.equals(toLong(c.getOrDefault("merchantId", 0L)), merchantId))
+                .findFirst().orElse(null);
+        if (complaint == null) {
+            return false;
+        }
+        if ("handled".equals(String.valueOf(complaint.get("status")))) {
+            return false;
+        }
+
+        String finalResult = (result == null || result.trim().isEmpty()) ? "同意退款" : result.trim();
+        complaint.put("status", "handled");
+        complaint.put("statusText", "商家已处理");
+        complaint.put("handleResult", finalResult);
+        complaint.put("handleRemark", remark == null ? "" : remark.trim());
+        complaint.put("handleRole", "merchant");
+        complaint.put("handleTime", now());
+
+        Long orderId = toLong(complaint.get("orderId"));
+        Map<String, Object> order = userOrders.stream()
+                .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), orderId))
+                .filter(o -> Objects.equals(toLong(o.getOrDefault("merchantId", 0L)), merchantId))
+                .findFirst().orElse(null);
+        if (order != null) {
+            if (finalResult.contains("拒绝")) {
+                order.put("status", "delivered");
+                order.put("adminStatus", 2);
+                appendLogisticsTrack(order, "售后驳回", "商家已驳回售后申请");
+            } else {
+                order.put("status", "cancelled");
+                order.put("adminStatus", 5);
+                if (finalResult.contains("退货")) {
+                    appendLogisticsTrack(order, "退货退款", "商家同意退货退款申请");
+                }
+                appendLogisticsTrack(order, "退款完成", "商家已完成售后处理，订单关闭");
+            }
+        }
+        return true;
     }
 
     public boolean handleComplaint(Long id, String result, String remark) {
@@ -1158,8 +1240,11 @@ public class RuntimeDataService {
                 .map(post -> {
                     Map<String, Object> row = new LinkedHashMap<>(post);
                     Long postMerchantId = ((Number) post.get("merchantId")).longValue();
+                    List<Map<String, Object>> approvedComments = approvedComments(post);
                     row.put("merchantAvatar", getMerchantAvatarById(postMerchantId));
                     row.put("isFollowed", followed.contains(postMerchantId));
+                    row.put("comments", approvedComments);
+                    row.put("commentCount", approvedComments.size());
                     return row;
                 })
                 .collect(Collectors.toList());
@@ -1170,7 +1255,14 @@ public class RuntimeDataService {
         Map<String, Object> post = circlePosts.stream()
                 .filter(p -> Objects.equals(((Number) p.get("id")).longValue(), id))
                 .findFirst().orElse(null);
-        return post == null ? null : new LinkedHashMap<>(post);
+        if (post == null) {
+            return null;
+        }
+        Map<String, Object> row = new LinkedHashMap<>(post);
+        List<Map<String, Object>> approvedComments = approvedComments(post);
+        row.put("comments", approvedComments);
+        row.put("commentCount", approvedComments.size());
+        return row;
     }
 
     public boolean followMerchant(Long userId, Long merchantId) {
@@ -1221,10 +1313,83 @@ public class RuntimeDataService {
         comment.put("userId", userId);
         comment.put("nickname", "用户" + userId);
         comment.put("content", content);
+        comment.put("auditStatus", 0);
+        comment.put("auditRemark", "");
+        comment.put("auditTime", null);
         comment.put("createTime", now());
         comments.add(comment);
-        post.put("commentCount", comments.size());
+        post.put("commentCount", countApprovedComments(comments));
         return comment;
+    }
+
+    public Map<String, Object> listAdminCircleComments(Integer page, Integer pageSize, Integer auditStatus, String keyword) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> post : circlePosts) {
+            Long postId = ((Number) post.get("id")).longValue();
+            String postTitle = String.valueOf(post.getOrDefault("title", ""));
+            String merchantName = String.valueOf(post.getOrDefault("merchantName", ""));
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> comments = (List<Map<String, Object>>) post.getOrDefault("comments", Collections.emptyList());
+            for (Map<String, Object> comment : comments) {
+                int commentAuditStatus = toInt(comment.getOrDefault("auditStatus", 1));
+                String content = String.valueOf(comment.getOrDefault("content", ""));
+                String nickname = String.valueOf(comment.getOrDefault("nickname", ""));
+                boolean auditMatched = auditStatus == null || commentAuditStatus == auditStatus;
+                boolean keywordMatched = keyword == null || keyword.isEmpty()
+                        || postTitle.contains(keyword)
+                        || merchantName.contains(keyword)
+                        || nickname.contains(keyword)
+                        || content.contains(keyword);
+                if (!auditMatched || !keywordMatched) {
+                    continue;
+                }
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("postId", postId);
+                row.put("postTitle", postTitle);
+                row.put("merchantName", merchantName);
+                row.put("commentId", toLong(comment.get("id")));
+                row.put("nickname", nickname);
+                row.put("content", content);
+                row.put("auditStatus", commentAuditStatus);
+                row.put("auditRemark", String.valueOf(comment.getOrDefault("auditRemark", "")));
+                row.put("createTime", comment.get("createTime"));
+                row.put("auditTime", comment.get("auditTime"));
+                rows.add(row);
+            }
+        }
+        rows.sort((a, b) -> {
+            int postCmp = Long.compare(toLong(b.get("postId")), toLong(a.get("postId")));
+            if (postCmp != 0) {
+                return postCmp;
+            }
+            return Long.compare(toLong(b.get("commentId")), toLong(a.get("commentId")));
+        });
+        return pageResult(rows, page, pageSize);
+    }
+
+    public boolean auditCircleComment(Long postId, Long commentId, Integer status, String remark) {
+        if (status == null || (status != 1 && status != 2)) {
+            return false;
+        }
+        Map<String, Object> post = circlePosts.stream()
+                .filter(p -> Objects.equals(((Number) p.get("id")).longValue(), postId))
+                .findFirst().orElse(null);
+        if (post == null) {
+            return false;
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> comments = (List<Map<String, Object>>) post.getOrDefault("comments", Collections.emptyList());
+        Map<String, Object> comment = comments.stream()
+                .filter(c -> Objects.equals(toLong(c.get("id")), commentId))
+                .findFirst().orElse(null);
+        if (comment == null) {
+            return false;
+        }
+        comment.put("auditStatus", status);
+        comment.put("auditRemark", remark == null ? "" : remark);
+        comment.put("auditTime", now());
+        post.put("commentCount", countApprovedComments(comments));
+        return true;
     }
 
     public Map<String, Object> listMerchantCirclePosts(Long userId, Integer page, Integer size) {
@@ -1552,28 +1717,22 @@ public class RuntimeDataService {
     }
 
     private Map<String, Object> sampleOrder(Long id, String status, int adminStatus) {
-        Map<String, Object> p1 = new LinkedHashMap<>();
-        p1.put("id", 2L);
-        p1.put("name", "精品圣女果");
-        p1.put("images", Collections.singletonList(image("tomato")));
-        p1.put("spec", "500g/盒");
-        p1.put("price", 6.9);
-        p1.put("quantity", 2);
+        Long merchantId = Objects.equals(id, 2L) ? 2L : 1L;
+        return sampleOrder(id, status, adminStatus, merchantId, 1L);
+    }
 
-        Map<String, Object> p2 = new LinkedHashMap<>();
-        p2.put("id", 4L);
-        p2.put("name", "红富士苹果礼盒");
-        p2.put("images", Collections.singletonList(image("apple")));
-        p2.put("spec", "2kg/箱");
-        p2.put("price", 21.8);
-        p2.put("quantity", 1);
+    private Map<String, Object> sampleOrder(Long id, String status, int adminStatus, Long merchantId, Long userId) {
+        List<Map<String, Object>> orderProducts = buildOrderProductsByMerchant(merchantId);
+        double totalAmount = orderProducts.stream()
+                .mapToDouble(item -> toDouble(item.get("price")) * toInt(item.getOrDefault("quantity", 1)))
+                .sum();
 
         Map<String, Object> order = new LinkedHashMap<>();
         order.put("id", id);
-        order.put("userId", 1L);
-        order.put("merchantId", 1L);
+        order.put("userId", userId == null ? 1L : userId);
+        order.put("merchantId", merchantId == null ? 1L : merchantId);
         order.put("orderNumber", "FV202602" + (1000 + id));
-        order.put("totalAmount", 35.6);
+        order.put("totalAmount", Math.round(totalAmount * 100D) / 100D);
         order.put("status", status);
         order.put("adminStatus", adminStatus);
         order.put("paymentMethod", "微信支付");
@@ -1599,9 +1758,46 @@ public class RuntimeDataService {
             tracks.add(logisticsTrack("订单完成", "用户已确认收货"));
         }
         order.put("logisticsTracks", tracks);
-        order.put("products", Arrays.asList(p1, p2));
+        order.put("products", orderProducts);
         order.put("reviewed", false);
         return order;
+    }
+
+    private List<Map<String, Object>> buildOrderProductsByMerchant(Long merchantId) {
+        List<Map<String, Object>> matched = products.stream()
+                .filter(p -> Objects.equals(((Number) p.getOrDefault("merchantId", 1L)).longValue(), merchantId))
+                .limit(2)
+                .collect(Collectors.toList());
+
+        if (matched.isEmpty()) {
+            matched = products.stream().limit(2).collect(Collectors.toList());
+        }
+
+        List<Map<String, Object>> orderProducts = new ArrayList<>();
+        for (int i = 0; i < matched.size(); i++) {
+            Map<String, Object> source = matched.get(i);
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", source.get("id"));
+            item.put("name", source.get("name"));
+            item.put("images", castListString(source.get("images")));
+            item.put("spec", source.getOrDefault("unit", "500g/份"));
+            item.put("price", toDouble(source.getOrDefault("price", 1D)));
+            item.put("quantity", i == 0 ? 2 : 1);
+            orderProducts.add(item);
+        }
+        return orderProducts;
+    }
+
+    private void ensureMerchant2HasShippableOrder() {
+        Long merchantId = 2L;
+        boolean hasShippableOrder = userOrders.stream()
+                .anyMatch(order -> Objects.equals(toLong(order.get("merchantId")), merchantId)
+                        && "shipped".equals(String.valueOf(order.get("status"))));
+        if (hasShippableOrder) {
+            return;
+        }
+        long id = orderIdSeq.incrementAndGet();
+        userOrders.add(0, sampleOrder(id, "shipped", 1, merchantId, 1L));
     }
 
     private Map<String, Object> trace(Long productId, String productName) {
@@ -1674,8 +1870,26 @@ public class RuntimeDataService {
         item.put("id", id);
         item.put("nickname", nickname);
         item.put("content", content);
+        item.put("auditStatus", 1);
+        item.put("auditRemark", "");
+        item.put("auditTime", now());
         item.put("createTime", now());
         return item;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> approvedComments(Map<String, Object> post) {
+        List<Map<String, Object>> comments = (List<Map<String, Object>>) post.getOrDefault("comments", Collections.emptyList());
+        return comments.stream()
+                .filter(comment -> toInt(comment.getOrDefault("auditStatus", 1)) == 1)
+                .map(LinkedHashMap::new)
+                .collect(Collectors.toList());
+    }
+
+    private int countApprovedComments(List<Map<String, Object>> comments) {
+        return (int) comments.stream()
+                .filter(comment -> toInt(comment.getOrDefault("auditStatus", 1)) == 1)
+                .count();
     }
 
     private Map<String, Object> traceTemplate(Long id, String name, String description) {

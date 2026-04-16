@@ -77,7 +77,7 @@
       </el-form>
       <div class="register-footer">
         <p>
-          已有账号？
+          已有账号
           <el-link type="primary" @click="handleLogin">立即登录</el-link>
         </p>
       </div>

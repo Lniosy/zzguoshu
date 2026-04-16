@@ -66,7 +66,7 @@
       </el-form>
       <div class="login-footer">
         <p>
-          还没有账号？
+          还没有账号
           <el-link type="primary" @click="handleRegister">立即注册</el-link>
         </p>
       </div>

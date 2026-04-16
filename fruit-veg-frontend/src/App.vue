@@ -14,7 +14,7 @@ const showAppNav = computed(() => {
   if (route.meta?.hideGlobalNav) return false
   return !route.path.startsWith('/admin')
 })
-const showCartFloat = computed(() => showAppNav.value && !route.path.startsWith('/cart') && !userStore.isAdmin)
+const showCartFloat = computed(() => showAppNav.value && !route.path.startsWith('/cart') && !userStore.isAdmin && !userStore.isSubAdmin)
 </script>
 
 <template>

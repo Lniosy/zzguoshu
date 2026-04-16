@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     gender TINYINT DEFAULT 0 COMMENT '性别：0未知 1男 2女',
     birthday DATE COMMENT '生日',
     status TINYINT DEFAULT 1 COMMENT '状态：0禁用 1正常',
+    role VARCHAR(20) DEFAULT 'USER' COMMENT '角色：USER/MERCHANT/SUB_ADMIN/ADMIN',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     deleted TINYINT DEFAULT 0 COMMENT '删除标志：0未删除 1已删除',
@@ -241,8 +242,8 @@ CREATE TABLE IF NOT EXISTS biz_notice (
 -- ==============================================
 
 -- 插入默认管理员用户（密码：123456，已加密）
-INSERT INTO sys_user (username, password, phone, nickname, avatar, gender, status, create_time)
-VALUES ('admin', '$2a$10$7JB720yubVSdLb.CiXH2ehema5dH3tqqK50tZxW9j8nP1uF12K3qQ', '13800138000', '管理员', '', 0, 1, NOW())
+INSERT INTO sys_user (username, password, phone, nickname, avatar, gender, status, role, create_time)
+VALUES ('admin', '$2a$10$7JB720yubVSdLb.CiXH2ehema5dH3tqqK50tZxW9j8nP1uF12K3qQ', '13800138000', '管理员', '', 0, 1, 'ADMIN', NOW())
 ON DUPLICATE KEY UPDATE username=username;
 
 -- 插入默认分类

@@ -117,7 +117,7 @@ const handleSetDefault = async (id) => {
 
 const handleDelete = async (id) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个地址吗？', '提示', {
+    await ElMessageBox.confirm('将删除该地址，请确认', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'

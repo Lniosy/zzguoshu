@@ -44,6 +44,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (user.getStatus() == null) {
             user.setStatus(1);
         }
+        if (user.getRole() == null || user.getRole().trim().isEmpty()) {
+            user.setRole("USER");
+        }
         // 保存用户
         return save(user);
     }

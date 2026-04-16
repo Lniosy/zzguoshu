@@ -52,9 +52,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // 默认用户角色
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
+        String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
+
+        if ("SUB_ADMIN".equals(role)) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_SUB_ADMIN"));
+        }
+
+        if ("ADMIN".equals(role)) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+
         // 检查是否是商家
         BizMerchant merchant = bizMerchantService.getByUserId(user.getId());
-        if (merchant != null && merchant.getStatus() == 1) {
+        if (("MERCHANT".equals(role)) || (merchant != null && merchant.getStatus() == 1)) {
             authorities.add(new SimpleGrantedAuthority("ROLE_MERCHANT"));
         }
 

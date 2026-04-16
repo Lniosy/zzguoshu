@@ -47,7 +47,7 @@
         <div ref="chatListRef" class="chat-list">
           <div v-if="!messages.length" class="empty-state">
             <h4>开始咨询</h4>
-            <p>例如：菠菜怎么存放更久？草莓怎么挑选更甜？</p>
+            <p>例如：菠菜怎么存放更久，草莓怎么挑选更甜</p>
           </div>
 
           <template v-for="(item, idx) in messages" :key="item.id || idx">
@@ -184,7 +184,7 @@ const handleCreateSession = async () => {
 
 const handleDeleteSession = async (session) => {
   try {
-    await ElMessageBox.confirm('确定删除该历史会话吗？删除后不可恢复。', '删除确认', {
+    await ElMessageBox.confirm('将删除该历史会话，删除后不可恢复，请确认。', '删除确认', {
       type: 'warning',
       confirmButtonText: '删除',
       cancelButtonText: '取消'

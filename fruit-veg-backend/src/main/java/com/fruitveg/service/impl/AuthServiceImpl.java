@@ -63,6 +63,7 @@ public class AuthServiceImpl implements AuthService {
         // 设置默认值
         sysUser.setStatus(1); // 正常状态
         sysUser.setGender(0); // 未知性别
+        sysUser.setRole("USER");
         sysUserMapper.insert(sysUser);
 
         // 生成token
@@ -146,6 +147,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String resolveRole(SysUser sysUser) {
+        if (sysUser.getRole() != null && !sysUser.getRole().trim().isEmpty()) {
+            return sysUser.getRole().trim().toUpperCase();
+        }
         if ("admin".equalsIgnoreCase(sysUser.getUsername())) {
             return "ADMIN";
         }

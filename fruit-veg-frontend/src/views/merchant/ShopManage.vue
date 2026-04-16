@@ -57,16 +57,19 @@
                   <template #default="{ row }">¥{{ Number(row.price).toFixed(2) }}</template>
                 </el-table-column>
                 <el-table-column prop="stock" label="库存" width="90" />
-                <el-table-column prop="auditStatus" label="状态" width="100">
+                <el-table-column prop="auditStatus" label="状态" width="120">
                   <template #default="{ row }">
-                    <el-tag :type="row.auditStatus === 1 ? 'success' : 'info'">{{ row.auditStatus === 1 ? '上架' : '下架' }}</el-tag>
+                    <el-tag :type="row.auditStatus === 1 ? 'success' : row.auditStatus === 2 ? 'danger' : 'warning'">
+                      {{ row.auditStatus === 1 ? '审核通过' : row.auditStatus === 2 ? '审核拒绝' : '待审核' }}
+                    </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="220" fixed="right">
+                <el-table-column label="操作" width="260" fixed="right">
                   <template #default="{ row }">
                     <el-button link type="primary" @click="openProductDialog(row)">编辑</el-button>
-                    <el-button v-if="row.auditStatus === 1" link @click="toggleProduct(row, 0)">下架</el-button>
-                    <el-button v-else link @click="toggleProduct(row, 1)">上架</el-button>
+                    <el-button v-if="row.auditStatus === 2" link @click="resubmitProduct(row)">重新提交审核</el-button>
+                    <el-tag v-if="row.auditStatus === 0" size="small" type="warning">审核中</el-tag>
+                    <el-tag v-if="row.auditStatus === 1" size="small" type="success">已上架</el-tag>
                   </template>
                 </el-table-column>
               </el-table>
@@ -153,6 +156,39 @@
                 </el-table-column>
               </el-table>
             </el-card>
+
+            <el-card style="margin-top: 14px">
+              <template #header>
+                <div class="pane-head">
+                  <h3>退款 / 退货处理</h3>
+                  <el-tag type="warning">处理用户售后申请</el-tag>
+                </div>
+              </template>
+              <el-table :data="merchantAfterSales" v-loading="loadingAfterSales">
+                <el-table-column prop="orderNo" label="订单号" min-width="180" />
+                <el-table-column prop="type" label="类型" width="130">
+                  <template #default="{ row }">{{ row.type || '退款' }}</template>
+                </el-table-column>
+                <el-table-column prop="reason" label="原因" min-width="220" show-overflow-tooltip />
+                <el-table-column prop="amount" label="金额" width="100">
+                  <template #default="{ row }">¥{{ Number(row.amount || 0).toFixed(2) }}</template>
+                </el-table-column>
+                <el-table-column prop="status" label="状态" width="120">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 'handled' ? 'success' : 'warning'">
+                      {{ afterSaleStatusMap[row.status] || row.status }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="handleResult" label="处理结果" min-width="160" show-overflow-tooltip />
+                <el-table-column label="操作" width="180" fixed="right">
+                  <template #default="{ row }">
+                    <el-button v-if="row.status === 'pending'" link type="primary" @click="openAfterSaleDialog(row)">处理售后</el-button>
+                    <el-tag v-else size="small">已处理</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
           </el-tab-pane>
 
           <el-tab-pane label="数据统计" name="stats">
@@ -227,6 +263,25 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="afterSaleDialogVisible" title="处理售后申请" width="520px">
+      <el-form :model="afterSaleForm" label-width="90px">
+        <el-form-item label="处理结果">
+          <el-select v-model="afterSaleForm.result" style="width: 100%">
+            <el-option label="同意退款" value="同意退款" />
+            <el-option label="同意退货退款" value="同意退货退款" />
+            <el-option label="拒绝申请" value="拒绝申请" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="处理备注">
+          <el-input v-model="afterSaleForm.remark" type="textarea" :rows="3" placeholder="可填写处理说明" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="afterSaleDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="afterSaleSaving" @click="submitAfterSale">确认处理</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="productVisible" :title="productForm.id ? '编辑商品' : '新增商品'" width="560px">
       <el-form :model="productForm" label-width="90px">
         <el-form-item label="商品名称"><el-input v-model="productForm.name" /></el-form-item>
@@ -291,10 +346,12 @@ import { useMerchantStore } from '@/stores/merchant'
 import {
   createMerchantCirclePost,
   deleteMerchantCirclePost,
+  getMerchantAfterSaleList,
   getMerchantCircleList,
   getMerchantProductList,
   getMerchantTraceList,
   getMerchantTraceQrcode,
+  handleMerchantAfterSale,
   updateMerchantCirclePost,
   updateMerchantProductStatus,
   getMerchantOrderList,
@@ -346,6 +403,15 @@ const merchantStats = ref({
 })
 const shipDialogVisible = ref(false)
 const shipping = ref(false)
+const merchantAfterSales = ref([])
+const loadingAfterSales = ref(false)
+const afterSaleDialogVisible = ref(false)
+const afterSaleSaving = ref(false)
+const afterSaleForm = ref({
+  id: null,
+  result: '同意退款',
+  remark: ''
+})
 const shipForm = ref({
   orderId: null,
   logisticsCompany: '郑州冷链快配',
@@ -439,9 +505,10 @@ const submitProduct = async () => {
     return
   }
   productSaving.value = true
+  const editing = Boolean(productForm.value.id)
   try {
     await saveMerchantProduct(productForm.value)
-    ElMessage.success('商品已保存')
+    ElMessage.success(editing ? '商品已更新，已重新提交审核' : '商品已提交审核，待管理员处理')
     productVisible.value = false
     await fetchProducts()
     await fetchTraces()
@@ -461,9 +528,9 @@ const fillSampleProductImage = () => {
   productForm.value.mainImage = samples[Math.floor(Math.random() * samples.length)]
 }
 
-const toggleProduct = async (row, status) => {
-  await updateMerchantProductStatus(row.id, { auditStatus: status })
-  ElMessage.success(status === 1 ? '商品已上架' : '商品已下架')
+const resubmitProduct = async (row) => {
+  await updateMerchantProductStatus(row.id, { auditStatus: 0 })
+  ElMessage.success('已重新提交审核')
   fetchProducts()
 }
 
@@ -520,6 +587,16 @@ const fetchMerchantOrders = async () => {
     merchantOrders.value = data.records || []
   } finally {
     loadingOrders.value = false
+  }
+}
+
+const fetchMerchantAfterSales = async () => {
+  loadingAfterSales.value = true
+  try {
+    const data = await getMerchantAfterSaleList({ page: 1, pageSize: 50 })
+    merchantAfterSales.value = data.records || []
+  } finally {
+    loadingAfterSales.value = false
   }
 }
 
@@ -595,7 +672,7 @@ const savePost = async () => {
 }
 
 const removePost = async (row) => {
-  await ElMessageBox.confirm(`确认删除动态“${row.title}”吗？`, '删除确认', { type: 'warning' })
+  await ElMessageBox.confirm(`将删除动态“${row.title}”，请确认`, '删除确认', { type: 'warning' })
   await deleteMerchantCirclePost(row.id)
   ElMessage.success('动态已删除')
   await fetchCircle()
@@ -608,6 +685,11 @@ const statusTextMap = {
   completed: '已完成',
   cancelled: '已取消',
   refunding: '售后处理中'
+}
+
+const afterSaleStatusMap = {
+  pending: '待处理',
+  handled: '已处理'
 }
 
 const openShipDialog = (row) => {
@@ -631,8 +713,39 @@ const submitShip = async () => {
     ElMessage.success('发货成功')
     shipDialogVisible.value = false
     await fetchMerchantOrders()
+  } catch (error) {
+    ElMessage.error(error?.message || '发货失败，请稍后重试')
   } finally {
     shipping.value = false
+  }
+}
+
+const openAfterSaleDialog = (row) => {
+  afterSaleForm.value = {
+    id: row.id,
+    result: row.type === '退货退款' ? '同意退货退款' : '同意退款',
+    remark: ''
+  }
+  afterSaleDialogVisible.value = true
+}
+
+const submitAfterSale = async () => {
+  if (!afterSaleForm.value.id) {
+    ElMessage.warning('售后单信息缺失')
+    return
+  }
+  afterSaleSaving.value = true
+  try {
+    await handleMerchantAfterSale(afterSaleForm.value.id, {
+      result: afterSaleForm.value.result,
+      remark: afterSaleForm.value.remark
+    })
+    ElMessage.success('售后处理成功')
+    afterSaleDialogVisible.value = false
+    await fetchMerchantAfterSales()
+    await fetchMerchantOrders()
+  } finally {
+    afterSaleSaving.value = false
   }
 }
 
@@ -642,6 +755,7 @@ const fetchData = async () => {
   await fetchCircle()
   await fetchTraces()
   await fetchMerchantOrders()
+  await fetchMerchantAfterSales()
   await fetchMerchantStats()
 }
 

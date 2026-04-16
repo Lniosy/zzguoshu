@@ -17,6 +17,8 @@ export const deleteMerchantCirclePost = (id) => request.delete(`/merchant/circle
 export const getMerchantOrderList = (params) => request.get('/merchant/orders', { params })
 export const getMerchantOrderDetail = (id) => request.get(`/merchant/orders/${id}`)
 export const shipMerchantOrder = (id, data) => request.put(`/merchant/orders/${id}/ship`, data)
+export const getMerchantAfterSaleList = (params) => request.get('/merchant/after-sales', { params })
+export const handleMerchantAfterSale = (id, data) => request.put(`/merchant/after-sales/${id}/handle`, data)
 
 // 商家商品与溯源
 export const getMerchantProductList = (params) => request.get('/merchant/products', { params })

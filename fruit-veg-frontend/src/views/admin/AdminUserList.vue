@@ -30,10 +30,26 @@
             <el-option label="禁用" :value="0" />
           </el-select>
         </el-form-item>
+        <el-form-item label="角色">
+          <el-select
+            v-model="searchForm.role"
+            placeholder="请选择角色"
+            :clearable="true"
+            style="width: 140px"
+          >
+            <el-option label="普通用户" value="USER" />
+            <el-option label="商家" value="MERCHANT" />
+            <el-option label="子管理员" value="SUB_ADMIN" />
+            <el-option label="总管理员" value="ADMIN" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
             搜索
+          </el-button>
+          <el-button type="success" @click="subAdminDialogVisible = true">
+            新增子管理员
           </el-button>
           <el-button @click="handleExport">
             导出CSV
@@ -67,6 +83,13 @@
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'">
               {{ row.status === 1 ? '正常' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="role" label="角色" width="110">
+          <template #default="{ row }">
+            <el-tag :type="row.role === 'ADMIN' ? 'danger' : row.role === 'SUB_ADMIN' ? 'warning' : row.role === 'MERCHANT' ? 'success' : 'info'">
+              {{ row.role === 'ADMIN' ? '总管理员' : row.role === 'SUB_ADMIN' ? '子管理员' : row.role === 'MERCHANT' ? '商家' : '普通用户' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -118,13 +141,34 @@
         <el-button @click="detailDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="subAdminDialogVisible" title="新增子管理员" width="520px">
+      <el-form :model="subAdminForm" label-width="90px">
+        <el-form-item label="账号">
+          <el-input v-model="subAdminForm.username" placeholder="请输入登录账号" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="subAdminForm.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model="subAdminForm.nickname" placeholder="请输入显示昵称" />
+        </el-form-item>
+        <el-form-item label="初始密码">
+          <el-input v-model="subAdminForm.password" type="password" show-password placeholder="至少6位" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="subAdminDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitSubAdmin">创建</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { exportUsers, getUserDetail, getUserList, toggleUserStatus } from '@/api/admin'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { createSubAdmin, exportUsers, getUserDetail, getUserList, toggleUserStatus } from '@/api/admin'
+import { ElMessage } from 'element-plus'
 
 // 响应式数据
 const loading = ref(false)
@@ -132,7 +176,8 @@ const userList = ref([])
 const searchForm = reactive({
   username: '',
   phone: '',
-  status: ''
+  status: '',
+  role: ''
 })
 const pagination = reactive({
   current: 1,
@@ -143,6 +188,13 @@ const selectedUsers = ref([])
 const detailDialogVisible = ref(false)
 const detailLoading = ref(false)
 const userDetail = ref({})
+const subAdminDialogVisible = ref(false)
+const subAdminForm = reactive({
+  username: '',
+  phone: '',
+  nickname: '',
+  password: ''
+})
 
 // 方法
 const fetchUserList = async () => {
@@ -173,6 +225,7 @@ const handleReset = () => {
   searchForm.username = ''
   searchForm.phone = ''
   searchForm.status = ''
+  searchForm.role = ''
   pagination.current = 1
   fetchUserList()
 }
@@ -190,6 +243,10 @@ const handleExport = async () => {
 }
 
 const handleToggleStatus = async (row) => {
+  if (row.role === 'ADMIN') {
+    ElMessage.warning('总管理员账号不可禁用')
+    return
+  }
   try {
     const status = row.status === 1 ? 0 : 1
     await toggleUserStatus(row.id, status)
@@ -226,6 +283,25 @@ const handleSizeChange = (size) => {
 const handleCurrentChange = (current) => {
   pagination.current = current
   fetchUserList()
+}
+
+const submitSubAdmin = async () => {
+  if (!subAdminForm.username || !subAdminForm.phone || subAdminForm.password.length < 6) {
+    ElMessage.warning('请填写完整信息，且密码至少6位')
+    return
+  }
+  try {
+    await createSubAdmin({ ...subAdminForm })
+    ElMessage.success('子管理员创建成功')
+    subAdminDialogVisible.value = false
+    subAdminForm.username = ''
+    subAdminForm.phone = ''
+    subAdminForm.nickname = ''
+    subAdminForm.password = ''
+    fetchUserList()
+  } catch (error) {
+    ElMessage.error(error?.message || '创建子管理员失败')
+  }
 }
 
 // 初始化

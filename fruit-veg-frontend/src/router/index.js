@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import pinia from '../stores'
 import { ElMessage } from 'element-plus'
 import HomeView from '../views/public/HomeView.vue'
 
@@ -188,12 +189,12 @@ const router = createRouter({
         {
           path: 'roles',
           name: 'admin-roles',
-          component: () => import('../views/admin/AdminRolePermission.vue')
+          redirect: '/admin/users'
         },
         {
           path: 'traces',
           name: 'admin-traces',
-          component: () => import('../views/admin/AdminTraceManage.vue')
+          redirect: '/admin/products'
         },
         {
           path: 'products',
@@ -242,7 +243,8 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const userStore = useUserStore()
+  const userStore = useUserStore(pinia)
+  const subAdminAllowedPaths = ['/admin/products', '/admin/merchants', '/admin/merchant-applications', '/admin/complaints']
   
   // 检查是否需要登录
   if (to.meta.requireAuth) {
@@ -251,6 +253,15 @@ router.beforeEach((to, from, next) => {
       if (to.meta.requireAdmin) {
         if (userStore.isAdmin) {
           next()
+        } else if (userStore.isSubAdmin) {
+          if (to.path === '/admin') {
+            next('/admin/products')
+          } else if (subAdminAllowedPaths.includes(to.path)) {
+            next()
+          } else {
+            ElMessage.warning('子管理员仅可访问审核相关页面')
+            next('/admin/products')
+          }
         } else {
           next('/') // 无权限跳转到首页
         }

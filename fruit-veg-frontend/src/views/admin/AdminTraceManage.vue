@@ -268,7 +268,7 @@ const submitTemplate = async () => {
 }
 
 const removeTemplate = async (row) => {
-  await ElMessageBox.confirm(`确认删除模板“${row.name}”？`, '提示', { type: 'warning' })
+  await ElMessageBox.confirm(`将删除模板“${row.name}”，请确认`, '提示', { type: 'warning' })
   await deleteTraceTemplate(row.id)
   ElMessage.success('模板已删除')
   fetchTemplateList()

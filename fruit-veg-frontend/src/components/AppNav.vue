@@ -43,8 +43,7 @@
               <el-dropdown-item v-if="role !== 'ADMIN'" command="cart">购物车</el-dropdown-item>
               <el-dropdown-item command="merchant-apply" v-if="role !== 'MERCHANT' && role !== 'ADMIN'">商家入驻</el-dropdown-item>
               <el-dropdown-item command="merchant-shop" v-if="role === 'MERCHANT'">店铺管理</el-dropdown-item>
-              <el-dropdown-item v-if="role === 'ADMIN'" command="admin">管理后台</el-dropdown-item>
-              <el-dropdown-item v-if="role === 'ADMIN'" command="admin-traces">溯源管理</el-dropdown-item>
+              <el-dropdown-item v-if="role === 'ADMIN' || role === 'SUB_ADMIN'" command="admin">管理后台</el-dropdown-item>
               <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -92,8 +91,7 @@ const routeMap = {
   cart: { path: '/cart', requireAuth: true },
   'merchant-apply': { path: '/merchant/apply', requireAuth: true },
   'merchant-shop': { path: '/merchant/shop', requireAuth: true },
-  admin: { path: '/admin', requireAuth: true },
-  'admin-traces': { path: '/admin/traces', requireAuth: true }
+  admin: { path: '/admin', requireAuth: true }
 }
 
 const isActive = (path) => {
@@ -117,7 +115,8 @@ const handleNav = (key) => {
   }
   const target = routeMap[key]
   if (!target) return
-  if ((key === 'admin' || key === 'admin-traces') && role.value !== 'ADMIN') {
+  const isAdminScope = role.value === 'ADMIN' || role.value === 'SUB_ADMIN'
+  if (key === 'admin' && !isAdminScope) {
     ElMessage.warning('当前账号无管理后台权限')
     return
   }

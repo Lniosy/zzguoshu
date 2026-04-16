@@ -198,7 +198,7 @@ const handleSave = async () => {
 
 const handleReset = async () => {
   try {
-    await ElMessageBox.confirm('确定要重置为原始信息吗？', '提示', {
+    await ElMessageBox.confirm('将重置为原始信息，请确认', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'

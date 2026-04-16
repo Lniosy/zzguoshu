@@ -11,7 +11,7 @@
     </el-card>
 
     <el-row :gutter="16">
-      <el-col :span="12">
+      <el-col :span="24">
         <el-card class="panel">
           <template #header>平台信息</template>
           <el-form label-width="110px">
@@ -29,26 +29,6 @@
             </el-form-item>
             <el-form-item label="版权信息">
               <el-input v-model="form.copyright" placeholder="请输入版权信息" />
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-
-      <el-col :span="12">
-        <el-card class="panel">
-          <template #header>业务参数</template>
-          <el-form label-width="160px">
-            <el-form-item label="订单自动取消(分钟)">
-              <el-input-number v-model="form.orderAutoCancelMinutes" :min="5" :max="120" />
-            </el-form-item>
-            <el-form-item label="售后申请有效期(天)">
-              <el-input-number v-model="form.afterSaleExpireDays" :min="1" :max="30" />
-            </el-form-item>
-            <el-form-item label="商品上架需审核">
-              <el-switch v-model="form.productAuditRequired" />
-            </el-form-item>
-            <el-form-item label="溯源信息需审核">
-              <el-switch v-model="form.traceAuditRequired" />
             </el-form-item>
           </el-form>
         </el-card>

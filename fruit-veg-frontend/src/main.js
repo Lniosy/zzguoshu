@@ -24,8 +24,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 // 安装插件
-app.use(router)
 app.use(pinia)
+app.use(router)
 app.use(ElementPlus)
 
 // 挂载应用
