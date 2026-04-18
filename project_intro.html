@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>郑州市果蔬销售系统 - 功能介绍</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --primary: #22C55E;
+            --primary-dark: #16A34A;
+            --primary-light: #DCFCE7;
+            --secondary: #F97316;
+            --dark: #0F172A;
+            --gray: #64748B;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8FAFC;
+            color: var(--dark);
+            scroll-behavior: smooth;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .bento-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #E2E8F0;
+        }
+
+        .bento-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.1), 0 10px 10px -5px rgba(34, 197, 94, 0.04);
+            border-color: var(--primary-light);
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at top right, #DCFCE7 0%, #F8FAFC 50%);
+        }
+
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 20s linear infinite;
+        }
+    </style>
+</head>
+<body class="hero-gradient">
+
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full z-50 glass-nav">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-green-200">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight">郑州市果蔬销售系统</span>
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+                <a href="#overview" class="hover:text-green-600 transition-colors">系统概览</a>
+                <a href="#features" class="hover:text-green-600 transition-colors">核心功能</a>
+                <a href="#roles" class="hover:text-green-600 transition-colors">角色体系</a>
+                <a href="#tech" class="hover:text-green-600 transition-colors">技术架构</a>
+            </div>
+            <a href="#" class="bg-green-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-green-700 transition-all shadow-md shadow-green-100">
+                开始体验
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="overview" class="pt-40 pb-20 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full text-green-700 text-sm font-medium mb-8">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                郑州市本地果蔬数字化销售平台
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
+                让每一份新鲜，<br><span class="text-green-600">都清晰可见</span>
+            </h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
+                集在线交易、全流程溯源、AI 智能问答与社区互动于一体。我们连接优质种植户与市民餐桌，通过数字化手段打造透明、健康、高效的果蔬流通体系。
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div class="flex -space-x-3">
+                    <img class="w-10 h-10 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" alt="user">
+                    <img class="w-10 h-10 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=2" alt="user">
+                    <img class="w-10 h-10 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=3" alt="user">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-500">+1k</div>
+                </div>
+                <span class="text-sm text-gray-500">郑州已有 1,000+ 用户选择我们</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心优势 -->
+    <section class="py-20 px-6 bg-white">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                    <i class="fas fa-shopping-basket"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-4">便捷交易</h3>
+                <p class="text-gray-500 leading-relaxed">智能搜索、分类筛选、一键下单。极致简化的购物流程，让新鲜果蔬触手可及。</p>
+            </div>
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-4">消费信任</h3>
+                <p class="text-gray-500 leading-relaxed">全流程溯源体系。扫码即看产地、采收、检测及物流，吃得放心，买得安心。</p>
+            </div>
+            <div class="flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-4">智能服务</h3>
+                <p class="text-gray-500 leading-relaxed">AI 果蔬专家在线解答。提供科普知识、存储建议与食用技巧，贴心的智能生活伴侣。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能 Bento Grid -->
+    <section id="features" class="py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div>
+                    <h2 class="text-4xl font-bold mb-4 tracking-tight">全场景功能覆盖</h2>
+                    <p class="text-gray-500 max-w-lg">不仅仅是一个商城，更是一个连接生产与消费的完整数字生态。</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-2 text-sm font-medium text-green-600">
+                        <i class="fas fa-check-circle"></i> 前后端分离
+                    </div>
+                    <div class="flex items-center gap-2 text-sm font-medium text-green-600">
+                        <i class="fas fa-check-circle"></i> 微服务架构
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- 溯源系统 -->
+                <div class="md:col-span-8 bento-card flex flex-col md:flex-row gap-8 overflow-hidden">
+                    <div class="flex-1">
+                        <div class="feature-icon bg-green-100 text-green-600"><i class="fas fa-qrcode"></i></div>
+                        <h3 class="text-2xl font-bold mb-4">全流程溯源体系</h3>
+                        <p class="text-gray-500 mb-6 leading-relaxed">基于一物一码技术，记录果蔬从“农场到餐桌”的每一个关键环节：</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> 产地环境与种植方式记录
+                            </li>
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> 施肥及农药安全间隔期监控
+                            </li>
+                            <li class="flex items-center gap-3 text-sm text-gray-600">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> 实时农残检测报告与采收时间
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="flex-1 bg-green-50 rounded-2xl p-6 relative">
+                        <!-- 模拟溯源界面 -->
+                        <div class="bg-white rounded-xl shadow-sm p-4 space-y-4">
+                            <div class="flex items-center gap-3 border-b pb-3">
+                                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white text-xs">郑</div>
+                                <div>
+                                    <div class="font-bold text-xs text-gray-800">红颜草莓 - 溯源详情</div>
+                                    <div class="text-[10px] text-gray-400">溯源码：20260309XJ88</div>
+                                </div>
+                            </div>
+                            <div class="space-y-3 relative">
+                                <div class="absolute left-1.5 top-0 bottom-0 w-px bg-green-100"></div>
+                                <div class="relative flex gap-3 pl-6">
+                                    <div class="absolute left-0 top-1.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                                    <div>
+                                        <div class="text-[11px] font-bold">已发货 - 物流中心</div>
+                                        <div class="text-[9px] text-gray-400">2026-03-09 10:20</div>
+                                    </div>
+                                </div>
+                                <div class="relative flex gap-3 pl-6">
+                                    <div class="absolute left-0 top-1.5 w-3 h-3 bg-green-300 rounded-full border-2 border-white"></div>
+                                    <div>
+                                        <div class="text-[11px] font-bold">检测合格 - 第三方实验室</div>
+                                        <div class="text-[9px] text-gray-400">2026-03-08 14:00</div>
+                                    </div>
+                                </div>
+                                <div class="relative flex gap-3 pl-6">
+                                    <div class="absolute left-0 top-1.5 w-3 h-3 bg-green-100 rounded-full border-2 border-white"></div>
+                                    <div>
+                                        <div class="text-[11px] font-bold">采收完成 - 荥阳采摘基地</div>
+                                        <div class="text-[9px] text-gray-400">2026-03-08 06:30</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 果蔬专家 -->
+                <div class="md:col-span-4 bento-card bg-slate-900 text-white border-none">
+                    <div class="feature-icon bg-blue-500 text-white"><i class="fas fa-microchip"></i></div>
+                    <h3 class="text-2xl font-bold mb-4">AI 果蔬专家</h3>
+                    <p class="text-slate-400 mb-8 text-sm leading-relaxed">内置智能问答引擎，随时随地为您解答关于新鲜的疑惑。</p>
+                    <div class="space-y-3 mb-8">
+                        <div class="bg-slate-800 p-3 rounded-lg text-xs text-slate-300">
+                            “西兰花如何长期保鲜？”
+                        </div>
+                        <div class="bg-blue-600/20 border border-blue-500/30 p-3 rounded-lg text-xs text-blue-100 italic">
+                            AI建议：洗净沥干后用保鲜膜包裹，放入冰箱冷藏区，可延长至5-7天...
+                        </div>
+                    </div>
+                    <button class="w-full py-3 bg-blue-600 rounded-xl text-sm font-bold hover:bg-blue-500 transition-colors">
+                        开始咨询 <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- 在线交易 -->
+                <div class="md:col-span-4 bento-card">
+                    <div class="feature-icon bg-orange-100 text-orange-600"><i class="fas fa-shopping-cart"></i></div>
+                    <h3 class="text-xl font-bold mb-3">极致购物体验</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">流畅的购物车管理与订单结算，支持多种支付方式模拟，实时追踪物流动态。</p>
+                </div>
+
+                <!-- 果蔬圈 -->
+                <div class="md:col-span-5 bento-card">
+                    <div class="feature-icon bg-purple-100 text-purple-600"><i class="fas fa-users"></i></div>
+                    <h3 class="text-xl font-bold mb-3">社区化互动：果蔬圈</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">商家发布种植动态展示环境，用户点赞评论分享心得。打造有温度的本地生鲜社区。</p>
+                    <div class="flex gap-2">
+                        <img class="w-12 h-12 rounded-lg object-cover" src="https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=100" alt="field">
+                        <img class="w-12 h-12 rounded-lg object-cover" src="https://images.unsplash.com/photo-1621236304198-651a21d33d28?auto=format&fit=crop&w=100" alt="vegs">
+                        <div class="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-400">+4</div>
+                    </div>
+                </div>
+
+                <!-- 数据统计 -->
+                <div class="md:col-span-3 bento-card">
+                    <div class="feature-icon bg-cyan-100 text-cyan-600"><i class="fas fa-chart-line"></i></div>
+                    <h3 class="text-xl font-bold mb-3">经营数据看板</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">为商家提供全方位的销售概览、商品分析与访客画像，辅助数字化决策。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 角色体系 -->
+    <section id="roles" class="py-24 px-6 bg-slate-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">完善的用户角色体系</h2>
+                <p class="text-gray-500">基于细粒度的权限控制，服务生态内的所有参与者</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- 管理员 -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-200">
+                    <span class="role-badge bg-blue-100 text-blue-600 mb-6 inline-block">系统管理员</span>
+                    <h4 class="text-xl font-bold mb-4">平台大脑</h4>
+                    <ul class="text-sm text-gray-500 space-y-3">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>商户入驻审批</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>溯源模板维护</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>违规信息处理</li>
+                    </ul>
+                </div>
+                <!-- 商家 -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-200">
+                    <span class="role-badge bg-green-100 text-green-600 mb-6 inline-block">入住商家</span>
+                    <h4 class="text-xl font-bold mb-4">新鲜源头</h4>
+                    <ul class="text-sm text-gray-500 space-y-3">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>商品发布与库存</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>录入溯源数据</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>处理订单发货</li>
+                    </ul>
+                </div>
+                <!-- 用户 -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-green-50 ring-2 ring-green-500/20">
+                    <span class="role-badge bg-orange-100 text-orange-600 mb-6 inline-block">注册用户</span>
+                    <h4 class="text-xl font-bold mb-4">核心消费者</h4>
+                    <ul class="text-sm text-gray-500 space-y-3">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>扫码查询溯源</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>在线下单购买</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>AI 咨询互动</li>
+                    </ul>
+                </div>
+                <!-- 游客 -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-200">
+                    <span class="role-badge bg-slate-100 text-slate-600 mb-6 inline-block">访问游客</span>
+                    <h4 class="text-xl font-bold mb-4">潜在用户</h4>
+                    <ul class="text-sm text-gray-500 space-y-3">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>浏览推荐商品</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>查看平台公告</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>注册引导体系</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section id="tech" class="py-24 px-6 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                <div class="flex-1">
+                    <h2 class="text-4xl font-bold mb-8 tracking-tight">前沿技术栈驱动</h2>
+                    <p class="text-gray-500 mb-12 leading-relaxed">
+                        采用主流的前后端分离架构，确保系统具备高性能、高可用性和良好的可扩展性。
+                    </p>
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <h5 class="font-bold mb-4 text-green-700">前端技术</h5>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li>Vue 3.x (Composition API)</li>
+                                <li>Vite 构建工具</li>
+                                <li>Element Plus 组件库</li>
+                                <li>Pinia 状态管理</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-bold mb-4 text-green-700">后端技术</h5>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li>Spring Boot 2.7.x</li>
+                                <li>Spring Security + JWT</li>
+                                <li>MyBatis Plus ORM</li>
+                                <li>Redis 高速缓存</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 relative">
+                    <div class="w-full aspect-square bg-green-50 rounded-full flex items-center justify-center">
+                        <div class="absolute inset-0 border-2 border-dashed border-green-200 rounded-full animate-spin-slow"></div>
+                        <div class="bg-white p-10 rounded-3xl shadow-2xl border border-green-100 z-10">
+                            <pre class="text-xs text-green-800 font-mono">
+{
+  "project": "郑州市果蔬销售系统",
+  "architecture": "B/S",
+  "separation": true,
+  "security": "JWT + BCrypt",
+  "database": "MySQL 8.0",
+  "cache": "Redis 6.0"
+}
+                            </pre>
+                        </div>
+                        <!-- 技术图标漂浮 -->
+                        <div class="absolute top-10 right-10 w-16 h-16 bg-white shadow-lg rounded-2xl flex items-center justify-center text-green-500 text-2xl">
+                            <i class="fab fa-vuejs"></i>
+                        </div>
+                        <div class="absolute bottom-10 left-10 w-16 h-16 bg-white shadow-lg rounded-2xl flex items-center justify-center text-green-600 text-2xl">
+                            <i class="fab fa-java"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-20 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+            <div class="text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-2 mb-6">
+                    <div class="w-8 h-8 bg-green-500 rounded flex items-center justify-center text-white">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <span class="text-lg font-bold">郑州市果蔬销售系统</span>
+                </div>
+                <p class="text-slate-400 max-w-sm text-sm">
+                    推动郑州市果蔬销售模式的数字化转型，构建高效、透明、安全的农产品流通体系。
+                </p>
+            </div>
+            <div class="flex gap-12 text-sm text-slate-400">
+                <div class="flex flex-col gap-4">
+                    <span class="text-white font-bold">快速链接</span>
+                    <a href="#" class="hover:text-green-400 transition-colors">开发者中心</a>
+                    <a href="#" class="hover:text-green-400 transition-colors">商户入驻</a>
+                    <a href="#" class="hover:text-green-400 transition-colors">关于我们</a>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <span class="text-white font-bold">联系支持</span>
+                    <a href="#" class="hover:text-green-400 transition-colors">意见反馈</a>
+                    <a href="#" class="hover:text-green-400 transition-colors">在线文档</a>
+                    <a href="#" class="hover:text-green-400 transition-colors">帮助中心</a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-slate-800 mt-20 pt-10 text-center text-slate-500 text-xs">
+            © 2026 郑州市果蔬销售系统. All rights reserved. V1.0.0
+        </div>
+    </footer>
+</body>
+</html>
