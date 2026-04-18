@@ -14,56 +14,68 @@
           text-color="#bfcbd9"
           active-text-color="#409EFF"
         >
-          <el-menu-item index="/admin">
-            <el-icon><House /></el-icon>
-            <span>首页</span>
-          </el-menu-item>
-          <el-sub-menu v-if="!isSubAdmin" index="users">
-            <template #title>
-              <el-icon><User /></el-icon>
-              <span>用户管理</span>
-            </template>
-            <el-menu-item index="/admin/users">用户列表</el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu index="products">
-            <template #title>
+          <template v-if="isSubAdmin">
+            <el-menu-item index="/admin/products">
               <el-icon><Goods /></el-icon>
-              <span>商品管理</span>
-            </template>
-            <el-menu-item index="/admin/products">商品列表</el-menu-item>
-          </el-sub-menu>
-          <el-sub-menu v-if="!isSubAdmin" index="orders">
-            <template #title>
-              <el-icon><Ticket /></el-icon>
-              <span>订单管理</span>
-            </template>
-            <el-menu-item index="/admin/orders">订单列表</el-menu-item>
-            <el-menu-item index="/admin/complaints">投诉处理</el-menu-item>
-          </el-sub-menu>
-          <el-menu-item v-else index="/admin/complaints">
-            <el-icon><Ticket /></el-icon>
-            <span>投诉处理</span>
-          </el-menu-item>
-          <el-sub-menu index="merchants">
-            <template #title>
+              <span>商品审核</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/merchant-applications">
               <el-icon><Shop /></el-icon>
-              <span>商家管理</span>
-            </template>
-            <el-menu-item index="/admin/merchants">商家列表</el-menu-item>
-            <el-menu-item index="/admin/merchant-applications">商家申请</el-menu-item>
-          </el-sub-menu>
-          <el-menu-item v-if="!isSubAdmin" index="/admin/stats">
-            <el-icon><DataAnalysis /></el-icon>
-            <span>数据统计</span>
-          </el-menu-item>
-          <el-menu-item v-if="!isSubAdmin" index="/admin/content">
-            <el-icon><Document /></el-icon>
-            <span>公告资讯</span>
-          </el-menu-item>
-          <el-menu-item v-if="!isSubAdmin" index="/admin/settings">
-            <el-icon><Setting /></el-icon>
-            <span>系统参数</span>
-          </el-menu-item>
+              <span>商家审核</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/complaints">
+              <el-icon><Ticket /></el-icon>
+              <span>投诉处理</span>
+            </el-menu-item>
+          </template>
+          <template v-else>
+            <el-menu-item index="/admin">
+              <el-icon><House /></el-icon>
+              <span>首页</span>
+            </el-menu-item>
+            <el-sub-menu index="users">
+              <template #title>
+                <el-icon><User /></el-icon>
+                <span>用户管理</span>
+              </template>
+              <el-menu-item index="/admin/users">用户列表</el-menu-item>
+            </el-sub-menu>
+            <el-sub-menu index="products">
+              <template #title>
+                <el-icon><Goods /></el-icon>
+                <span>商品管理</span>
+              </template>
+              <el-menu-item index="/admin/products">商品列表与审核</el-menu-item>
+            </el-sub-menu>
+            <el-sub-menu index="orders">
+              <template #title>
+                <el-icon><Ticket /></el-icon>
+                <span>订单管理</span>
+              </template>
+              <el-menu-item index="/admin/orders">订单列表</el-menu-item>
+              <el-menu-item index="/admin/complaints">投诉处理</el-menu-item>
+            </el-sub-menu>
+            <el-sub-menu index="merchants">
+              <template #title>
+                <el-icon><Shop /></el-icon>
+                <span>商家管理</span>
+              </template>
+              <el-menu-item index="/admin/merchants">商家列表</el-menu-item>
+              <el-menu-item index="/admin/merchant-applications">商家申请</el-menu-item>
+            </el-sub-menu>
+            <el-menu-item index="/admin/stats">
+              <el-icon><DataAnalysis /></el-icon>
+              <span>数据统计</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/content">
+              <el-icon><Document /></el-icon>
+              <span>公告与评论审核</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/settings">
+              <el-icon><Setting /></el-icon>
+              <span>系统参数</span>
+            </el-menu-item>
+          </template>
         </el-menu>
       </el-aside>
       <el-container class="admin-main">
@@ -129,7 +141,12 @@ const isSubAdmin = computed(() => userStore.getRole === 'SUB_ADMIN')
 
 // 页面标题
 const pageTitle = computed(() => {
-  const titles = {
+  const subAdminTitles = {
+    '/admin/products': '商品审核',
+    '/admin/merchant-applications': '商家审核',
+    '/admin/complaints': '投诉处理'
+  }
+  const adminTitles = {
     '/admin': '首页',
     '/admin/users': '用户管理',
     '/admin/products': '商品管理',
@@ -137,11 +154,12 @@ const pageTitle = computed(() => {
     '/admin/complaints': '投诉处理',
     '/admin/merchants': '商家列表',
     '/admin/merchant-applications': '商家申请',
-    '/admin/stats': '数据统计'
-    ,'/admin/content': '公告资讯'
-    ,'/admin/settings': '系统参数'
+    '/admin/stats': '数据统计',
+    '/admin/content': '公告与评论审核',
+    '/admin/settings': '系统参数'
   }
-  return titles[route.path] || '首页'
+  const titles = isSubAdmin.value ? subAdminTitles : adminTitles
+  return titles[route.path] || (isSubAdmin.value ? '商品审核' : '首页')
 })
 
 const handleCommand = (command) => {

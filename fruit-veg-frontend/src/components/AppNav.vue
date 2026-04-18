@@ -29,7 +29,17 @@
         <el-button v-if="!isLoggedIn" type="primary" @click="handleNav('login')">登录</el-button>
         <el-button v-if="!isLoggedIn" @click="handleNav('register')">注册</el-button>
 
-        <el-dropdown v-else @command="handleNav">
+        <el-button
+          v-if="isLoggedIn && isAdminScope"
+          type="primary"
+          class="admin-entry-btn"
+          @click="handleNav('admin')"
+        >
+          <el-icon><Setting /></el-icon>
+          <span>进入管理后台</span>
+        </el-button>
+
+        <el-dropdown v-else-if="isLoggedIn" @command="handleNav">
           <span class="user-chip">
             <el-avatar :size="30" :src="userInfo?.avatar">{{ userInfo?.username?.[0]?.toUpperCase() }}</el-avatar>
             <span>{{ userInfo?.nickname || userInfo?.username }}</span>
@@ -37,13 +47,25 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="user">个人中心</el-dropdown-item>
-              <el-dropdown-item v-if="role !== 'ADMIN'" command="orders">我的订单</el-dropdown-item>
-              <el-dropdown-item v-if="role !== 'ADMIN'" command="after-sales">我的售后</el-dropdown-item>
-              <el-dropdown-item v-if="role !== 'ADMIN'" command="favorites">我的收藏</el-dropdown-item>
-              <el-dropdown-item v-if="role !== 'ADMIN'" command="cart">购物车</el-dropdown-item>
-              <el-dropdown-item command="merchant-apply" v-if="role !== 'MERCHANT' && role !== 'ADMIN'">商家入驻</el-dropdown-item>
+              <el-dropdown-item command="orders">我的订单</el-dropdown-item>
+              <el-dropdown-item command="after-sales">我的售后</el-dropdown-item>
+              <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
+              <el-dropdown-item command="cart">购物车</el-dropdown-item>
+              <el-dropdown-item command="merchant-apply" v-if="role !== 'MERCHANT'">商家入驻</el-dropdown-item>
               <el-dropdown-item command="merchant-shop" v-if="role === 'MERCHANT'">店铺管理</el-dropdown-item>
-              <el-dropdown-item v-if="role === 'ADMIN' || role === 'SUB_ADMIN'" command="admin">管理后台</el-dropdown-item>
+              <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
+        <el-dropdown v-if="isLoggedIn && isAdminScope" @command="handleNav">
+          <span class="user-chip">
+            <el-avatar :size="30" :src="userInfo?.avatar">{{ userInfo?.username?.[0]?.toUpperCase() }}</el-avatar>
+            <span>{{ userInfo?.nickname || userInfo?.username }}</span>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="admin">管理后台</el-dropdown-item>
               <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -56,7 +78,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Setting } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { useAppNavigation } from '@/composables/useAppNavigation'
@@ -76,6 +98,7 @@ const navItems = [
 const isLoggedIn = computed(() => userStore.getIsLoggedIn)
 const userInfo = computed(() => userStore.getUserInfo)
 const role = computed(() => userStore.getRole || 'USER')
+const isAdminScope = computed(() => role.value === 'ADMIN' || role.value === 'SUB_ADMIN')
 
 const routeMap = {
   home: { path: '/' },
@@ -196,6 +219,20 @@ const handleNav = (key) => {
 
 .user-chip:hover {
   background: rgba(255, 255, 255, 0.14);
+}
+
+.admin-entry-btn {
+  background: linear-gradient(135deg, #ffb347, #ff7e36);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(255, 126, 54, 0.35);
+}
+
+.admin-entry-btn:hover,
+.admin-entry-btn:focus {
+  background: linear-gradient(135deg, #ffa127, #ff6a20);
+  color: #fff;
 }
 
 @media (max-width: 980px) {

@@ -161,12 +161,21 @@ const handleLogin = async () => {
     }
     ElMessage.success('登录成功')
 
-    // 跳转到首页或之前的页面
+    // 跳转到首页或之前的页面（管理员/子管理员默认进入后台）
     const redirect = router.currentRoute.value.query.redirect
     if (redirect) {
       router.push(decodeURIComponent(redirect))
     } else {
-      router.push('/')
+      const role = userStore.getRole
+      if (role === 'ADMIN') {
+        router.push('/admin')
+      } else if (role === 'SUB_ADMIN') {
+        router.push('/admin/products')
+      } else if (role === 'MERCHANT') {
+        router.push('/merchant/shop')
+      } else {
+        router.push('/')
+      }
     }
   } catch (error) {
     console.error('登录失败:', error)
