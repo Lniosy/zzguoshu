@@ -212,6 +212,7 @@ public class RuntimeDataService {
     public Map<String, Object> listProducts(Integer page, Integer size, String keyword, String sortBy, Long categoryId,
                                             Double minPrice, Double maxPrice, Long merchantId) {
         List<Map<String, Object>> filtered = products.stream()
+                .filter(p -> ((Number) p.getOrDefault("auditStatus", 1)).intValue() != 3)
                 .filter(p -> keyword == null
                         || String.valueOf(p.get("name")).contains(keyword)
                         || getMerchantNameById(((Number) p.getOrDefault("merchantId", 1L)).longValue()).contains(keyword))
@@ -492,11 +493,11 @@ public class RuntimeDataService {
         if (row == null) {
             return false;
         }
-        // 商家仅允许提交审核，不能自行改为审核通过
-        if (auditStatus != null && auditStatus != 0) {
+        // 商家允许提交审核(0)或下架(3)
+        if (auditStatus != null && auditStatus != 0 && auditStatus != 3) {
             return false;
         }
-        int finalStatus = 0;
+        int finalStatus = auditStatus == null ? 0 : auditStatus;
         row.put("auditStatus", finalStatus);
         syncMerchantProductStatusToDb(((Number) row.get("id")).longValue(), finalStatus);
         return true;
@@ -1309,7 +1310,8 @@ public class RuntimeDataService {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> comments = (List<Map<String, Object>>) post.computeIfAbsent("comments", k -> new ArrayList<>());
         Map<String, Object> comment = new LinkedHashMap<>();
-        comment.put("id", comments.size() + 1L);
+        long maxId = comments.stream().mapToLong(c -> ((Number) c.getOrDefault("id", 0L)).longValue()).max().orElse(0L);
+        comment.put("id", maxId + 1L);
         comment.put("userId", userId);
         comment.put("nickname", "用户" + userId);
         comment.put("content", content);
@@ -1320,6 +1322,25 @@ public class RuntimeDataService {
         comments.add(comment);
         post.put("commentCount", countApprovedComments(comments));
         return comment;
+    }
+
+    public boolean deleteCircleComment(Long postId, Long commentId, Long userId) {
+        Map<String, Object> post = circlePosts.stream()
+                .filter(p -> Objects.equals(((Number) p.get("id")).longValue(), postId))
+                .findFirst().orElse(null);
+        if (post == null) {
+            return false;
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> comments = (List<Map<String, Object>>) post.getOrDefault("comments", Collections.emptyList());
+        boolean removed = comments.removeIf(c ->
+                Objects.equals(toLong(c.get("id")), commentId)
+                && Objects.equals(toLong(c.get("userId")), userId)
+        );
+        if (removed) {
+            post.put("commentCount", countApprovedComments(comments));
+        }
+        return removed;
     }
 
     public Map<String, Object> listAdminCircleComments(Integer page, Integer pageSize, Integer auditStatus, String keyword) {

@@ -59,17 +59,17 @@
                 <el-table-column prop="stock" label="库存" width="90" />
                 <el-table-column prop="auditStatus" label="状态" width="120">
                   <template #default="{ row }">
-                    <el-tag :type="row.auditStatus === 1 ? 'success' : row.auditStatus === 2 ? 'danger' : 'warning'">
-                      {{ row.auditStatus === 1 ? '审核通过' : row.auditStatus === 2 ? '审核拒绝' : '待审核' }}
+                    <el-tag :type="row.auditStatus === 1 ? 'success' : row.auditStatus === 2 ? 'danger' : row.auditStatus === 3 ? 'info' : 'warning'">
+                      {{ row.auditStatus === 1 ? '审核通过' : row.auditStatus === 2 ? '审核拒绝' : row.auditStatus === 3 ? '已下架' : '待审核' }}
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="260" fixed="right">
+                <el-table-column label="操作" width="300" fixed="right">
                   <template #default="{ row }">
                     <el-button link type="primary" @click="openProductDialog(row)">编辑</el-button>
-                    <el-button v-if="row.auditStatus === 2" link @click="resubmitProduct(row)">重新提交审核</el-button>
+                    <el-button v-if="row.auditStatus === 2 || row.auditStatus === 3" link @click="resubmitProduct(row)">重新上架</el-button>
+                    <el-button v-if="row.auditStatus === 1" link type="danger" @click="delistProduct(row)">下架</el-button>
                     <el-tag v-if="row.auditStatus === 0" size="small" type="warning">审核中</el-tag>
-                    <el-tag v-if="row.auditStatus === 1" size="small" type="success">已上架</el-tag>
                   </template>
                 </el-table-column>
               </el-table>
@@ -531,6 +531,13 @@ const fillSampleProductImage = () => {
 const resubmitProduct = async (row) => {
   await updateMerchantProductStatus(row.id, { auditStatus: 0 })
   ElMessage.success('已重新提交审核')
+  fetchProducts()
+}
+
+const delistProduct = async (row) => {
+  await ElMessageBox.confirm(`确定下架商品“${row.name}”吗？`, '下架确认', { type: 'warning' })
+  await updateMerchantProductStatus(row.id, { auditStatus: 3 })
+  ElMessage.success('商品已下架')
   fetchProducts()
 }
 

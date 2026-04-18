@@ -37,6 +37,7 @@
             <el-option label="待审核" :value="0" />
             <el-option label="审核通过" :value="1" />
             <el-option label="审核拒绝" :value="2" />
+            <el-option label="已下架" :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -90,6 +91,8 @@
                   ? 'success'
                   : row.auditStatus === 2
                   ? 'danger'
+                  : row.auditStatus === 3
+                  ? 'info'
                   : 'warning'
               "
             >
@@ -98,6 +101,8 @@
                   ? '审核通过'
                   : row.auditStatus === 2
                   ? '审核拒绝'
+                  : row.auditStatus === 3
+                  ? '已下架'
                   : '待审核'
               }}
             </el-tag>

@@ -154,7 +154,7 @@ public class MerchantController {
         Integer status = payload == null ? 0 : payload.getOrDefault("auditStatus", 0);
         return mockDataService.updateMerchantProductStatus(getUserId(request), id, status)
                 ? Result.success()
-            : Result.error(400, "仅支持提交审核，商品不存在或无权限");
+            : Result.error(400, "操作失败，商品不存在或无权限");
     }
 
     @GetMapping("/trace/list")

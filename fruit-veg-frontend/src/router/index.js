@@ -194,7 +194,7 @@ const router = createRouter({
         {
           path: 'traces',
           name: 'admin-traces',
-          redirect: '/admin/products'
+          component: () => import('../views/admin/AdminTraceManage.vue')
         },
         {
           path: 'products',

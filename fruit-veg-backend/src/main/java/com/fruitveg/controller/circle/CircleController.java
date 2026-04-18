@@ -55,6 +55,16 @@ public class CircleController {
         return Result.success(comment);
     }
 
+    @DeleteMapping("/{postId}/comment/{commentId}")
+    public Result<Void> deleteComment(@PathVariable Long postId,
+                                       @PathVariable Long commentId,
+                                       HttpServletRequest request) {
+        Long userId = getUserId(request);
+        return mockDataService.deleteCircleComment(postId, commentId, userId)
+                ? Result.success()
+                : Result.error(404, "评论不存在或无权限");
+    }
+
     @PostMapping("/follow/{merchantId}")
     public Result<Void> follow(@PathVariable Long merchantId, HttpServletRequest request) {
         return mockDataService.followMerchant(getUserId(request), merchantId)

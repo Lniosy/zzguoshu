@@ -67,7 +67,10 @@
         <p class="comment-title">{{ activePost.title }}</p>
         <el-timeline>
           <el-timeline-item v-for="c in activePost.comments || []" :key="c.id" :timestamp="c.createTime">
-            <b>{{ c.nickname }}</b>：{{ c.content }}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <span><b>{{ c.nickname }}</b>：{{ c.content }}</span>
+              <el-button v-if="Number(c.userId) === currentUserId" link type="danger" size="small" @click="deleteComment(c)">删除</el-button>
+            </div>
           </el-timeline-item>
         </el-timeline>
         <el-input v-model="commentText" type="textarea" :rows="3" maxlength="200" show-word-limit placeholder="写下你的看法..." />
@@ -84,9 +87,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppNavigation } from '@/composables/useAppNavigation'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   commentCircle,
+  deleteCircleComment,
   followMerchant,
   getCircleDetail,
   getCircleList,
@@ -101,6 +105,7 @@ const { navigate } = useAppNavigation()
 const userStore = useUserStore()
 const isLoggedIn = computed(() => userStore.getIsLoggedIn)
 const isAdmin = computed(() => userStore.isAdmin)
+const currentUserId = computed(() => userStore.userInfo?.id)
 
 const list = ref([])
 const followedMerchants = ref([])
@@ -153,6 +158,14 @@ const submitComment = async () => {
   await commentCircle(activePost.value.id, { content: commentText.value.trim() })
   ElMessage.success('评论已提交，待管理员审核后展示')
   commentVisible.value = false
+  fetchList()
+}
+
+const deleteComment = async (comment) => {
+  await ElMessageBox.confirm('确定删除该评论吗？', '提示', { type: 'warning' })
+  await deleteCircleComment(activePost.value.id, comment.id)
+  ElMessage.success('评论已删除')
+  activePost.value = await getCircleDetail(activePost.value.id)
   fetchList()
 }
 

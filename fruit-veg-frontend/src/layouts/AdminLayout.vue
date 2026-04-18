@@ -67,6 +67,13 @@
               <el-icon><DataAnalysis /></el-icon>
               <span>数据统计</span>
             </el-menu-item>
+            <el-sub-menu index="traces">
+              <template #title>
+                <el-icon><Document /></el-icon>
+                <span>溯源管理</span>
+              </template>
+              <el-menu-item index="/admin/traces">数据审核</el-menu-item>
+            </el-sub-menu>
             <el-menu-item index="/admin/content">
               <el-icon><Document /></el-icon>
               <span>公告与评论审核</span>
@@ -155,6 +162,7 @@ const pageTitle = computed(() => {
     '/admin/merchants': '商家列表',
     '/admin/merchant-applications': '商家申请',
     '/admin/stats': '数据统计',
+    '/admin/traces': '溯源管理',
     '/admin/content': '公告与评论审核',
     '/admin/settings': '系统参数'
   }
