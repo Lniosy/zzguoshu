@@ -104,7 +104,8 @@ public class MerchantController {
         }
         String logisticsCompany = payload == null ? null : payload.get("logisticsCompany");
         String logisticsNo = payload == null ? null : payload.get("logisticsNo");
-        return mockDataService.shipOrder(id, logisticsCompany, logisticsNo)
+        String shipmentPhoto = payload == null ? null : payload.get("shipmentPhoto");
+        return mockDataService.shipOrder(id, logisticsCompany, logisticsNo, shipmentPhoto)
                 ? Result.success()
                 : Result.error(404, "订单不存在");
     }

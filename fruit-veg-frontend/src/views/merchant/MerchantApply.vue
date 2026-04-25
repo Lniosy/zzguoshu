@@ -75,12 +75,13 @@
                 class="upload-demo"
                 :action="uploadUrl"
                 :headers="uploadHeaders"
-                :on-success="handleUploadSuccess"
-                :on-error="handleUploadError"
                 :before-upload="beforeUpload"
+                :on-change="(file, fileList) => handleMaterialChange('businessLicense', file, fileList)"
+                :on-remove="() => handleMaterialRemove('businessLicense')"
                 accept=".pdf,.jpg,.jpeg,.png"
                 :file-list="applyForm.licenseFileList"
                 :auto-upload="false"
+                :limit="1"
               >
                 <el-button size="small" type="primary">点击上传</el-button>
                 <template #tip>
@@ -96,12 +97,13 @@
                 class="upload-demo"
                 :action="uploadUrl"
                 :headers="uploadHeaders"
-                :on-success="handleUploadSuccess"
-                :on-error="handleUploadError"
                 :before-upload="beforeUpload"
+                :on-change="(file, fileList) => handleMaterialChange('foodLicense', file, fileList)"
+                :on-remove="() => handleMaterialRemove('foodLicense')"
                 accept=".pdf,.jpg,.jpeg,.png"
                 :file-list="applyForm.foodLicenseFileList"
                 :auto-upload="false"
+                :limit="1"
               >
                 <el-button size="small" type="primary">点击上传</el-button>
                 <template #tip>
@@ -117,12 +119,13 @@
                 class="upload-demo"
                 :action="uploadUrl"
                 :headers="uploadHeaders"
-                :on-success="handleUploadSuccess"
-                :on-error="handleUploadError"
                 :before-upload="beforeUpload"
+                :on-change="(file, fileList) => handleMaterialChange('idCardImage', file, fileList)"
+                :on-remove="() => handleMaterialRemove('idCardImage')"
                 accept=".pdf,.jpg,.jpeg,.png"
                 :file-list="applyForm.idCardFileList"
                 :auto-upload="false"
+                :limit="1"
               >
                 <el-button size="small" type="primary">点击上传</el-button>
                 <template #tip>
@@ -183,6 +186,9 @@ const applyForm = reactive({
   licenseFileList: [],
   foodLicenseFileList: [],
   idCardFileList: [],
+  businessLicense: '',
+  foodLicense: '',
+  idCardImage: '',
   agreement: false
 })
 
@@ -227,12 +233,33 @@ const navigateBack = () => {
   navigate('/')
 }
 
-const handleUploadSuccess = (response, file, fileList) => {
-  ElMessage.success(`${file.name} 上传成功`)
+const materialNameMap = {
+  businessLicense: '营业执照',
+  foodLicense: '食品经营许可证',
+  idCardImage: '法人身份证'
 }
 
-const handleUploadError = (error, file, fileList) => {
-  ElMessage.error(`${file.name} 上传失败`)
+const readFileAsDataUrl = (rawFile) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(reader.result)
+  reader.onerror = reject
+  reader.readAsDataURL(rawFile)
+})
+
+const handleMaterialChange = async (field, file, fileList) => {
+  if (!file?.raw) return
+  if (!beforeUpload(file.raw)) {
+    handleMaterialRemove(field)
+    return
+  }
+  applyForm[field] = await readFileAsDataUrl(file.raw)
+  const listKey = field === 'businessLicense' ? 'licenseFileList' : field === 'foodLicense' ? 'foodLicenseFileList' : 'idCardFileList'
+  applyForm[listKey] = fileList.slice(-1)
+  ElMessage.success(`${materialNameMap[field]}已选择，提交后管理员可在审核详情中查看`)
+}
+
+const handleMaterialRemove = (field) => {
+  applyForm[field] = ''
 }
 
 const beforeUpload = (file) => {
@@ -273,13 +300,23 @@ const handleSubmit = async () => {
 
     loading.value = true
 
-    // 调用 API 提交入驻申请
+    const qualificationMaterials = [
+      { name: '营业执照', url: applyForm.businessLicense },
+      { name: '食品经营许可证', url: applyForm.foodLicense },
+      { name: '法人身份证', url: applyForm.idCardImage }
+    ].filter(item => item.url)
+
+    // 调用 API 提交入驻申请，资质图片随申请单保存，供管理员审核时查看
     await merchantStore.merchantApply({
       shopName: applyForm.shopName,
       businessType: applyForm.businessType,
       contactName: applyForm.contactName,
       contactPhone: applyForm.contactPhone,
-      address: applyForm.address
+      address: applyForm.address,
+      businessLicense: applyForm.businessLicense,
+      foodLicense: applyForm.foodLicense,
+      idCardImage: applyForm.idCardImage,
+      qualificationMaterials
     })
 
     ElMessage.success('入驻申请提交成功')

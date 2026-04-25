@@ -794,6 +794,10 @@ public class RuntimeDataService {
     }
 
     public boolean shipOrder(Long id, String logisticsCompany, String logisticsNo) {
+        return shipOrder(id, logisticsCompany, logisticsNo, null);
+    }
+
+    public boolean shipOrder(Long id, String logisticsCompany, String logisticsNo, String shipmentPhoto) {
         Map<String, Object> found = userOrders.stream()
                 .filter(o -> Objects.equals(((Number) o.get("id")).longValue(), id))
                 .findFirst().orElse(null);
@@ -805,6 +809,9 @@ public class RuntimeDataService {
         found.put("deliveryTime", now());
         found.put("logisticsCompany", logisticsCompany == null || logisticsCompany.isEmpty() ? "郑州冷链快配" : logisticsCompany);
         found.put("logisticsNo", logisticsNo == null || logisticsNo.isEmpty() ? "ZZL" + System.currentTimeMillis() : logisticsNo);
+        if (shipmentPhoto != null && !shipmentPhoto.trim().isEmpty()) {
+            found.put("shipmentPhoto", shipmentPhoto.trim());
+        }
         appendLogisticsTrack(found, "已发货", "商家已发货，包裹进入冷链配送");
         appendLogisticsTrack(found, "运输中", "配送中，请保持电话畅通");
         return true;
@@ -1192,6 +1199,10 @@ public class RuntimeDataService {
         item.put("contactName", payload.getOrDefault("contactName", ""));
         item.put("contactPhone", payload.getOrDefault("contactPhone", ""));
         item.put("address", payload.getOrDefault("address", ""));
+        item.put("businessLicense", payload.getOrDefault("businessLicense", ""));
+        item.put("foodLicense", payload.getOrDefault("foodLicense", ""));
+        item.put("idCardImage", payload.getOrDefault("idCardImage", ""));
+        item.put("qualificationMaterials", normalizeQualificationMaterials(payload));
         item.put("logoUrl", image("merchant"));
         item.put("auditStatus", 0);
         item.put("createTime", now());
@@ -1766,6 +1777,7 @@ public class RuntimeDataService {
         order.put("address", "郑州市金水区农业路 88 号");
         order.put("logisticsCompany", "郑州冷链快配");
         order.put("logisticsNo", "ZZL202602" + (2000 + id));
+        order.put("shipmentPhoto", null);
         List<Map<String, Object>> tracks = new ArrayList<>();
         tracks.add(logisticsTrack("订单创建", "订单已创建，等待支付"));
         if (!"pending".equals(status)) {
@@ -1874,9 +1886,63 @@ public class RuntimeDataService {
         item.put("contactPhone", contactPhone);
         item.put("address", address);
         item.put("logoUrl", logoUrl);
+        item.put("businessLicense", "/api/images/VCG211404252512.jpg");
+        item.put("foodLicense", "/api/images/VCG41N1414031312.jpg");
+        item.put("idCardImage", "/api/images/VCG211560306770.jpeg");
+        item.put("qualificationMaterials", Arrays.asList(
+                qualificationMaterial("营业执照", "/api/images/VCG211404252512.jpg"),
+                qualificationMaterial("食品经营许可证", "/api/images/VCG41N1414031312.jpg"),
+                qualificationMaterial("法人身份证", "/api/images/VCG211560306770.jpeg")
+        ));
         item.put("auditStatus", 1);
         item.put("createTime", now());
         return item;
+    }
+
+
+    private List<Map<String, Object>> normalizeQualificationMaterials(Map<String, Object> payload) {
+        Object raw = payload.get("qualificationMaterials");
+        if (raw instanceof Collection) {
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (Object item : (Collection<?>) raw) {
+                if (item instanceof Map) {
+                    Map<?, ?> source = (Map<?, ?>) item;
+                    Object nameValue = source.get("name");
+                    Object urlValue = source.get("url");
+                    Object typeValue = source.get("type");
+                    String name = nameValue == null ? "资质材料" : String.valueOf(nameValue);
+                    String url = urlValue == null ? "" : String.valueOf(urlValue);
+                    String type = typeValue == null ? "" : String.valueOf(typeValue);
+                    if (!url.trim().isEmpty()) {
+                        Map<String, Object> row = qualificationMaterial(name, url);
+                        row.put("type", type);
+                        rows.add(row);
+                    }
+                }
+            }
+            if (!rows.isEmpty()) {
+                return rows;
+            }
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        addQualificationIfPresent(rows, "营业执照", payload.get("businessLicense"));
+        addQualificationIfPresent(rows, "食品经营许可证", payload.get("foodLicense"));
+        addQualificationIfPresent(rows, "法人身份证", payload.get("idCardImage"));
+        return rows;
+    }
+
+    private void addQualificationIfPresent(List<Map<String, Object>> rows, String name, Object url) {
+        if (url != null && !String.valueOf(url).trim().isEmpty()) {
+            rows.add(qualificationMaterial(name, String.valueOf(url)));
+        }
+    }
+
+    private Map<String, Object> qualificationMaterial(String name, String url) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("name", name);
+        row.put("url", url);
+        row.put("type", url != null && url.toLowerCase(Locale.ROOT).startsWith("data:application/pdf") ? "pdf" : "image");
+        return row;
     }
 
     private void bindProductMerchant(Long productId, Long merchantId) {

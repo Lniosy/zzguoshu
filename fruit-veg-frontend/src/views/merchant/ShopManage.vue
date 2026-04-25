@@ -114,10 +114,9 @@
                 <el-table-column prop="originName" label="产地" min-width="120" />
                 <el-table-column prop="plantMethod" label="种植方式" width="120" />
                 <el-table-column prop="harvestTime" label="采收时间" min-width="160" />
-                <el-table-column label="操作" width="220" fixed="right">
+                <el-table-column label="操作" width="120" fixed="right">
                   <template #default="{ row }">
                     <el-button link type="primary" @click="openTraceDialog(row)">编辑溯源</el-button>
-                    <el-button link @click="showTraceQrcode(row)">溯源二维码</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -256,6 +255,30 @@
         <el-form-item label="物流单号">
           <el-input v-model="shipForm.logisticsNo" placeholder="请输入物流单号" />
         </el-form-item>
+        <el-form-item label="发货照片">
+          <el-upload
+            class="shipment-upload"
+            accept="image/*"
+            :auto-upload="false"
+            :limit="1"
+            :file-list="shipFileList"
+            :on-change="handleShipmentPhotoChange"
+            :on-remove="clearShipmentPhoto"
+          >
+            <el-button type="primary" plain>上传发货照片</el-button>
+            <template #tip>
+              <div class="el-upload__tip">用于向用户展示商家打包/出库凭证，支持 jpg、png、webp，大小不超过 5MB。</div>
+            </template>
+          </el-upload>
+          <el-image
+            v-if="shipForm.shipmentPhoto"
+            :src="shipForm.shipmentPhoto"
+            fit="cover"
+            class="shipment-preview"
+            :preview-src-list="[shipForm.shipmentPhoto]"
+            preview-teleported
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="shipDialogVisible = false">取消</el-button>
@@ -327,12 +350,6 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="traceQrcodeVisible" title="溯源二维码" width="420px">
-      <div class="qr-wrap" v-if="traceQrcode.url">
-        <el-image :src="traceQrcode.url" fit="contain" style="width: 220px; height: 220px;" />
-        <p>{{ traceQrcode.traceUrl }}</p>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -350,7 +367,6 @@ import {
   getMerchantCircleList,
   getMerchantProductList,
   getMerchantTraceList,
-  getMerchantTraceQrcode,
   handleMerchantAfterSale,
   updateMerchantCirclePost,
   updateMerchantProductStatus,
@@ -387,8 +403,6 @@ const merchantTraces = ref([])
 const loadingTraces = ref(false)
 const traceVisible = ref(false)
 const traceSaving = ref(false)
-const traceQrcodeVisible = ref(false)
-const traceQrcode = ref({ url: '', traceUrl: '' })
 const merchantOrders = ref([])
 const loadingOrders = ref(false)
 const loadingStats = ref(false)
@@ -415,8 +429,10 @@ const afterSaleForm = ref({
 const shipForm = ref({
   orderId: null,
   logisticsCompany: '郑州冷链快配',
-  logisticsNo: ''
+  logisticsNo: '',
+  shipmentPhoto: ''
 })
+const shipFileList = ref([])
 const productForm = ref({
   id: null,
   name: '',
@@ -578,15 +594,6 @@ const submitTrace = async () => {
   }
 }
 
-const showTraceQrcode = async (row) => {
-  const data = await getMerchantTraceQrcode(row.productId)
-  traceQrcode.value = {
-    url: data.qrUrl,
-    traceUrl: data.traceUrl
-  }
-  traceQrcodeVisible.value = true
-}
-
 const fetchMerchantOrders = async () => {
   loadingOrders.value = true
   try {
@@ -699,10 +706,39 @@ const afterSaleStatusMap = {
   handled: '已处理'
 }
 
+const readShipmentFile = (rawFile) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(reader.result)
+  reader.onerror = reject
+  reader.readAsDataURL(rawFile)
+})
+
+const handleShipmentPhotoChange = async (file, fileList) => {
+  if (!file?.raw) return
+  if (!file.raw.type.startsWith('image/')) {
+    ElMessage.warning('请上传图片格式的发货照片')
+    clearShipmentPhoto()
+    return
+  }
+  if (file.raw.size / 1024 / 1024 > 5) {
+    ElMessage.warning('发货照片不能超过 5MB')
+    clearShipmentPhoto()
+    return
+  }
+  shipForm.value.shipmentPhoto = await readShipmentFile(file.raw)
+  shipFileList.value = fileList.slice(-1)
+}
+
+const clearShipmentPhoto = () => {
+  shipForm.value.shipmentPhoto = ''
+  shipFileList.value = []
+}
+
 const openShipDialog = (row) => {
   shipForm.value.orderId = row.id
   shipForm.value.logisticsCompany = '郑州冷链快配'
   shipForm.value.logisticsNo = ''
+  clearShipmentPhoto()
   shipDialogVisible.value = true
 }
 
@@ -711,11 +747,16 @@ const submitShip = async () => {
     ElMessage.warning('请输入物流单号')
     return
   }
+  if (!shipForm.value.shipmentPhoto) {
+    ElMessage.warning('请上传发货照片')
+    return
+  }
   shipping.value = true
   try {
     await shipMerchantOrder(shipForm.value.orderId, {
       logisticsCompany: shipForm.value.logisticsCompany,
-      logisticsNo: shipForm.value.logisticsNo.trim()
+      logisticsNo: shipForm.value.logisticsNo.trim(),
+      shipmentPhoto: shipForm.value.shipmentPhoto
     })
     ElMessage.success('发货成功')
     shipDialogVisible.value = false
@@ -794,6 +835,13 @@ onMounted(fetchData)
 .pane-head h3 { margin: 0; }
 .kpi-title { color: #5f7769; font-size: 14px; }
 .kpi-value { margin-top: 8px; font-size: 28px; font-weight: 700; color: #274236; }
-.qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.qr-wrap p { margin: 0; color: #4f6c61; font-size: 13px; word-break: break-all; text-align: center; }
+.shipment-preview {
+  display: block;
+  width: 180px;
+  height: 120px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #dbe7df;
+  background: #f4faf6;
+}
 </style>

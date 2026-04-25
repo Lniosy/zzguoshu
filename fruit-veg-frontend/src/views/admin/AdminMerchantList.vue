@@ -129,7 +129,7 @@
     <el-dialog
       v-model="detailDialogVisible"
       title="商家详情"
-      width="600px"
+      width="760px"
       destroy-on-close
     >
       <el-descriptions :column="1" border>
@@ -144,10 +144,29 @@
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentMerchant.createTime }}</el-descriptions-item>
-        <el-descriptions-item label="店铺描述" v-if="currentMerchant.description">
-          {{ currentMerchant.description }}
+        <el-descriptions-item label="店铺描述" v-if="currentMerchant.shopDescription || currentMerchant.description">
+          {{ currentMerchant.shopDescription || currentMerchant.description }}
         </el-descriptions-item>
       </el-descriptions>
+
+      <div class="qualification-section">
+        <div class="section-title">入驻资质材料</div>
+        <el-empty v-if="!qualificationMaterials.length" description="暂无上传资质" />
+        <div v-else class="qualification-grid">
+          <div v-for="item in qualificationMaterials" :key="item.name" class="qualification-card">
+            <div class="qualification-name">{{ item.name }}</div>
+            <el-image
+              v-if="isImageMaterial(item)"
+              :src="item.url"
+              :preview-src-list="imageMaterialUrls"
+              fit="cover"
+              class="qualification-image"
+              preview-teleported
+            />
+            <el-link v-else type="primary" :href="item.url" target="_blank">查看 PDF 材料</el-link>
+          </div>
+        </div>
+      </div>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="detailDialogVisible = false">关闭</el-button>
@@ -158,9 +177,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { computed, ref, reactive, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getMerchantList, auditMerchant } from '@/api/admin'
+import { getMerchantList, getMerchantDetail, auditMerchant } from '@/api/admin'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 响应式数据
@@ -181,10 +200,26 @@ const pagination = reactive({
 const selectedMerchants = ref([])
 const detailDialogVisible = ref(false)
 const currentMerchant = ref({})
+const isImageMaterial = (item) => {
+  const url = String(item?.url || '').toLowerCase()
+  return item?.type === 'image' || url.startsWith('data:image/') || /\.(png|jpe?g|webp|gif)(\?|$)/.test(url)
+}
+const qualificationMaterials = computed(() => {
+  const list = currentMerchant.value.qualificationMaterials
+  if (Array.isArray(list) && list.length) {
+    return list.filter(item => item?.url)
+  }
+  return [
+    { name: '营业执照', url: currentMerchant.value.businessLicense },
+    { name: '食品经营许可证', url: currentMerchant.value.foodLicense },
+    { name: '法人身份证', url: currentMerchant.value.idCardImage }
+  ].filter(item => item.url)
+})
+const imageMaterialUrls = computed(() => qualificationMaterials.value
+  .filter(isImageMaterial)
+  .map(item => item.url))
 
 // 监听路由变化，解决组件复用冲突
-import { watch, onMounted } from 'vue'
-
 const initFromRoute = () => {
   if (route.path === '/admin/merchant-applications') {
     searchForm.auditStatus = 0
@@ -247,8 +282,12 @@ const handleAudit = async (row, status) => {
   }
 }
 
-const handleView = (row) => {
-  currentMerchant.value = { ...row }
+const handleView = async (row) => {
+  try {
+    currentMerchant.value = await getMerchantDetail(row.id)
+  } catch (error) {
+    currentMerchant.value = { ...row }
+  }
   detailDialogVisible.value = true
 }
 
@@ -297,5 +336,42 @@ onMounted(() => {
 .pagination {
   margin-top: 20px;
   text-align: right;
+}
+
+.qualification-section {
+  margin-top: 18px;
+}
+
+.section-title {
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: #244034;
+}
+
+.qualification-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.qualification-card {
+  padding: 12px;
+  border: 1px solid #e1ece5;
+  border-radius: 10px;
+  background: #f8fbf9;
+}
+
+.qualification-name {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b685b;
+}
+
+.qualification-image {
+  width: 100%;
+  height: 132px;
+  border-radius: 8px;
+  background: #eef5f1;
 }
 </style>

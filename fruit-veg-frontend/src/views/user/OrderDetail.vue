@@ -44,6 +44,16 @@
             <el-descriptions-item label="物流公司">{{ order.logisticsCompany || '-' }}</el-descriptions-item>
             <el-descriptions-item label="物流单号">{{ order.logisticsNo || '-' }}</el-descriptions-item>
           </el-descriptions>
+          <div v-if="order.shipmentPhoto" class="shipment-proof">
+            <div class="shipment-proof-title">商家发货照片</div>
+            <el-image
+              :src="order.shipmentPhoto"
+              fit="cover"
+              class="shipment-proof-image"
+              :preview-src-list="[order.shipmentPhoto]"
+              preview-teleported
+            />
+          </div>
         </el-card>
         <!-- 商品列表 -->
         <el-card class="product-card">
@@ -237,6 +247,7 @@ const order = ref({
   address: '',
   logisticsCompany: '',
   logisticsNo: '',
+  shipmentPhoto: '',
   logisticsTracks: [],
   products: []
 })
@@ -441,5 +452,27 @@ onMounted(() => {
 .order-actions {
   display: flex;
   gap: 10px;
+}
+
+.shipment-proof {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #dfece5;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f7fbf8 0%, #eef7f1 100%);
+}
+
+.shipment-proof-title {
+  margin-bottom: 10px;
+  font-weight: 700;
+  color: #274236;
+}
+
+.shipment-proof-image {
+  width: 220px;
+  height: 150px;
+  border-radius: 10px;
+  border: 1px solid #d6e6dd;
+  background: #fff;
 }
 </style>
